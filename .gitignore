@@ -1,0 +1,6 @@
+# Hardhat files
+node_modules/
+.cache/
+artifacts/
+coverage/
+dist/
