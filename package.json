@@ -3,15 +3,18 @@
     "version": "1.0.0",
     "description": "Un outil d'enregistrement de documents sur la blockchain",
     "scripts": {
-        "test": "hardhat test"
+        "test": "hardhat test",
+        "compile": "hardhat compile",
+        "deploy-sepolia": "npx hardhat ignition deploy ./ignition/modules/FileManager.js --network sepolia"
     },
     "author": "Anthony Jaspers",
-    "license": "UNLICENSED",
-    "dependencies": {
-        "chai": "^5.1.1",
-        "ethers": "^6.12.2",
-        "hardhat": "^2.22.4",
-        "hardhat-gas-reporter": "^2.2.0",
-        "solidity-coverage": "^0.8.12"
+    "license": "GPL-3.0-only",
+    "devDependencies": {
+        "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+        "hardhat": "^2.22.4"
+    },
+    "engines": {
+        "node": ">=20.11.0",
+        "npm": ">=10.8.0"
     }
 }
