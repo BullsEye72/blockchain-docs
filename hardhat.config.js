@@ -27,14 +27,3 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     console.log(account.address);
   }
 });
-
-task("testSepolia", "Test a function on a deployed contract")
-  .addParam("ownerId", "The files owner ID")
-  .setAction(async (taskArgs, hre) => {
-    const contractAddress = "0x168D653D9e6A212c1f950Bbfb5b029fb2E3c3561";
-    const fileFactory = await hre.ethers.getContractAt("FileManagerFactory", contractAddress);
-
-    const files = await fileFactory.getFilesByOwner(taskArgs.ownerId);
-    expect(files).to.be.an("array");
-    console.log(files);
-  });
