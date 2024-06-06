@@ -26,77 +26,76 @@ const factoryContract = new ethers.Contract(
 const contractWithSigner = factoryContract.connect(signer);
 
 async function FilesPage({ params }) {
-  // Simulate loading time - REMOVE THIS FROM PRODUCTION CODE
-  console.log("start");
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log("end");
-  // End simulation - REMOVE THIS FROM PRODUCTION CODE
+  try {
+    // Files info
+    const filesByOwner = await contractWithSigner.getFilesByOwner(params.user);
+    let files = [];
 
-  // Files info
-  const filesByOwner = await contractWithSigner.getFilesByOwner(params.user);
-  let files = [];
+    // Get files data
+    if (filesByOwner.length > 0) {
+      for (let i = 0; i < filesByOwner.length; i++) {
+        const fileAddress = filesByOwner[i][0];
+        const fileContract = new ethers.Contract(fileAddress, FileManagerContract.abi, provider);
+        const fileData = await fileContract.getFileContent();
 
-  // Get files data
-  if (filesByOwner.length > 0) {
-    for (let i = 0; i < filesByOwner.length; i++) {
-      const fileAddress = filesByOwner[i];
-      const fileContract = new ethers.Contract(fileAddress, FileManagerContract.abi, provider);
-      const fileData = await fileContract.getFileContent();
+        console.log("filesByOwner (page.js) : ", filesByOwner[i]);
 
-      console.log(filesByOwner[i]);
-
-      files.push({
-        name: fileData[0], // ex: 'Test File'
-        hash: fileData[1], // ex: 'ABDFSDGFS'
-        ower: fileData[2], // BigInt owner ID from db, ex: 2n
-        lastModified: new Date(Number(fileData[3])), // JS timestamp is in milliseconds , ex: 345346543576345687n
-        transactionTimestamp: new Date(Number(fileData[4]) * 1000), // BigInt timestamp, Convert to milliseconds, ex: 1717415772n
-        transactionLink: `https://sepolia.etherscan.io/address/${fileAddress}`,
-      });
+        files.push({
+          name: fileData[0], // ex: 'Test File'
+          hash: fileData[1], // ex: 'ABDFSDGFS'
+          ower: fileData[2], // BigInt owner ID from db, ex: 2n
+          lastModified: new Date(Number(fileData[3])), // JS timestamp is in milliseconds , ex: 345346543576345687n
+          transactionTimestamp: new Date(Number(fileData[4]) * 1000), // BigInt timestamp, Convert to milliseconds, ex: 1717415772n
+          transactionLink: `https://sepolia.etherscan.io/address/${fileAddress}`,
+        });
+      }
     }
-  }
 
-  return (
-    <>
-      <h2>Files for user ID : {params.user}</h2>
+    return (
+      <>
+        <h2>Files for user ID : {params.user}</h2>
 
-      <CardGroup itemsPerRow={4} stackable>
-        {files.map((file, index) => (
-          <Card key={index} className="mb-4">
-            <CardContent>
-              <CardHeader>File Details</CardHeader>
-              <CardMeta style={{ wordWrap: "anywhere" }}>
-                <Icon name="hashtag" />: {file.hash}
-              </CardMeta>
-              <CardDescription style={{ wordWrap: "break-word" }}>
-                <Icon name="file text" />
-                <strong>Name :</strong> {file.name} <br />
-                <Icon name="calendar" />
-                <strong>Last Modified:</strong> {file.lastModified.toLocaleDateString()} <br />
-                <Icon name="calendar check outline" />
-                <strong>Transaction Timestamp:</strong> {file.transactionTimestamp.toLocaleDateString()} <br />
-                <Icon name="ethereum" />
-                <Link href={file.transactionLink} target="_blank" rel="noopener noreferrer">
-                  View on etherscan
-                </Link>
-              </CardDescription>
+        <CardGroup itemsPerRow={4} stackable>
+          {files.map((file, index) => (
+            <Card key={index} className="mb-4">
+              <CardContent>
+                <CardHeader>File Details</CardHeader>
+                <CardMeta style={{ wordWrap: "anywhere" }}>
+                  <Icon name="hashtag" />: {file.hash}
+                </CardMeta>
+                <CardDescription style={{ wordWrap: "break-word" }}>
+                  <Icon name="file text" />
+                  <strong>Name :</strong> {file.name} <br />
+                  <Icon name="calendar" />
+                  <strong>Last Modified:</strong> {file.lastModified.toLocaleDateString()} <br />
+                  <Icon name="calendar check outline" />
+                  <strong>Transaction Timestamp:</strong> {file.transactionTimestamp.toLocaleDateString()} <br />
+                  <Icon name="ethereum" />
+                  <Link href={file.transactionLink} target="_blank" rel="noopener noreferrer">
+                    View on etherscan
+                  </Link>
+                </CardDescription>
+              </CardContent>
+            </Card>
+          ))}
+          <Card as={Link} href={`./${params.user}/new`}>
+            <CardContent textAlign="center">
+              <Grid centered columns={1} style={{ height: "100%" }}>
+                <GridColumn verticalAlign="middle">
+                  <Icon name="add circle" size="huge" />
+                </GridColumn>
+              </Grid>
             </CardContent>
           </Card>
-        ))}
-        <Card as={Link} href={`./${params.user}/new`}>
-          <CardContent textAlign="center">
-            <Grid centered columns={1} style={{ height: "100%" }}>
-              <GridColumn verticalAlign="middle">
-                <Icon name="add circle" size="huge" />
-              </GridColumn>
-            </Grid>
-          </CardContent>
-        </Card>
-      </CardGroup>
+        </CardGroup>
 
-      <p>Total Files: {files.length}</p>
-    </>
-  );
+        <p>Total Files: {files.length}</p>
+      </>
+    );
+  } catch (error) {
+    console.error("Error in FilesPage : ", error);
+    return <h3>An error has occured !</h3>;
+  }
 }
 
 export default FilesPage;

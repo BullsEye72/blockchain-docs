@@ -8,9 +8,13 @@ import "hardhat/console.sol";
  * @dev This contract is used to create a new file in the blockchain
  */
 contract FileManagerFactory {
+    struct OwnerData {
+        address fileAddress;
+        string fileHash;
+    }
+    mapping(uint => OwnerData[]) private dataByOwner;
     mapping(uint => uint) public filesCountByOwner;
 
-    mapping(uint => address[]) private managedFilesByOwner;
     address private manager;
 
     // event for EVM logging
@@ -34,16 +38,16 @@ contract FileManagerFactory {
         uint _lastModified
     ) public isManager {
         address newFile = address(
-            new FileManager(_name, _hash, _owner, _lastModified)
+            new FileManager(_name, _hash, _owner, _lastModified, manager)
         );
-        managedFilesByOwner[_owner].push(newFile);
+        dataByOwner[_owner].push(OwnerData(newFile, _hash));
         filesCountByOwner[_owner]++;
     }
 
     function getFilesByOwner(
         uint _owner
-    ) public view isManager returns (address[] memory) {
-        return managedFilesByOwner[_owner];
+    ) public view isManager returns (OwnerData[] memory) {
+        return dataByOwner[_owner];
     }
 
     /**
@@ -62,14 +66,6 @@ contract FileManagerFactory {
     function getManager() external view returns (address) {
         return manager;
     }
-
-    function getSender() external view returns (address) {
-        return msg.sender;
-    }
-
-    function testManager() external view isManager returns (bool) {
-        return true;
-    }
 }
 
 /**
@@ -83,13 +79,20 @@ contract FileManager {
     uint lastModified; // Last time the file was modified, from metadata
     uint dateAdded; // Date the file was added to the blockchain
     address public factory; // Address of the factory of the file
+    address private manager; // Address of the manager of the file factory
+    mapping(string => string) public metadata; // Metadata of the file
+
+    event FileCreated(string name, string fileHash, uint owner, uint dateAdded);
 
     constructor(
         string memory _name,
         string memory _fileHash,
         uint _owner,
-        uint _lastModified
+        uint _lastModified,
+        address _manager
     ) {
+        manager = _manager;
+
         owner = _owner;
         lastModified = _lastModified;
 
@@ -100,11 +103,29 @@ contract FileManager {
         name = _name;
     }
 
+    modifier isManager() {
+        require(msg.sender == manager, "Caller is not the manager");
+        _;
+    }
+
     function getFileContent()
         public
         view
         returns (string memory, string memory, uint, uint, uint)
     {
         return (name, fileHash, owner, lastModified, dateAdded);
+    }
+
+    function setMetadata(
+        string memory key,
+        string memory value
+    ) public isManager {
+        metadata[key] = value;
+    }
+
+    function getMetadata(
+        string memory key
+    ) public view returns (string memory) {
+        return metadata[key];
     }
 }

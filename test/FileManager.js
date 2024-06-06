@@ -14,8 +14,35 @@ describe("Manages deployed file contracts", function () {
     const fileOwnerId = 2;
     await hardhatFileFactory.createFile("Test", "FAKEHASH", fileOwnerId, Date.now());
     const files = await hardhatFileFactory.getFilesByOwner(fileOwnerId);
+
     return { hardhatFileFactory, owner, files };
   }
+
+  describe("Factory contract manipulation", function () {
+    it("can retrieve the manager's address", async function () {
+      const { hardhatFileFactory, owner } = await loadFixture(deployFileManagerFixture);
+      const manager = await hardhatFileFactory.getManager();
+      expect(manager).to.equal(owner.address);
+    });
+
+    it("can retrieve an owner's files addresses and hashes", async function () {
+      const { hardhatFileFactory, owner } = await loadFixture(deployFileManagerFixture);
+      const fileOwnerId = 2;
+      await hardhatFileFactory.createFile("Test", "FAKEHASH", fileOwnerId, Date.now());
+      await hardhatFileFactory.createFile("Test2", "FAKEHASH2", fileOwnerId, Date.now());
+      const files = await hardhatFileFactory.getFilesByOwner(fileOwnerId);
+
+      let filesAddresses = [];
+      let filesHashes = [];
+      for (let i = 0; i < files.length; i++) {
+        filesAddresses.push(files[i][0]);
+        filesHashes.push(files[i][1]);
+      }
+
+      expect(filesAddresses).to.exist.and.be.an("array").and.have.lengthOf(2);
+      expect(filesHashes).to.exist.and.be.an("array").and.have.lengthOf(2);
+    });
+  });
 
   describe("Deployment", function () {
     it("Deploys the FileManagerFactory contract", async function () {
@@ -57,7 +84,7 @@ describe("Manages deployed file contracts", function () {
   describe("File contract manipulation", function () {
     it("can retrieve a file by its address", async function () {
       const { hardhatFileFactory, files } = await loadFixture(createFileFixture);
-      const file = files[0];
+      const file = files[0][0]; // get the address (0) of the first file (0)
       const fileManager = await ethers.getContractAt("FileManager", file);
       const fileData = await fileManager.getFileContent();
       expect(fileData).to.exist;
@@ -66,8 +93,8 @@ describe("Manages deployed file contracts", function () {
 
     it("has a name, fileHash, owner, and 2 timestamps", async function () {
       const { hardhatFileFactory, files } = await loadFixture(createFileFixture);
-      const file = files[0];
-      const fileManager = await ethers.getContractAt("FileManager", file);
+      const fileAddress = files[0][0];
+      const fileManager = await ethers.getContractAt("FileManager", fileAddress);
       const fileData = await fileManager.getFileContent();
 
       const name = fileData[0];
