@@ -11,3 +11,9 @@ REPORT_GAS=true npx hardhat test
 npx hardhat node
 npx hardhat ignition deploy ./ignition/modules/Lock.js
 ```
+
+Deployment command :
+```shell
+npm run deploy-sepolia -- --deployment-id lgc_files_v3
+```
+
