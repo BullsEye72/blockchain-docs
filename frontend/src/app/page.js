@@ -1,9 +1,7 @@
-function DocuChain({ Component, pageProps }) {
+export default function Page() {
   return (
-    <div>
-      <h2>Page d'accueil</h2>
-    </div>
+    <>
+      <h1>Base Page</h1>
+    </>
   );
 }
-
-export default DocuChain;

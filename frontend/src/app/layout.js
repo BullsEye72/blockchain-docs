@@ -1,7 +1,10 @@
-import { Inter } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
+import "semantic-ui-css/semantic.min.css";
+import { Menu, MenuItem, Container } from "semantic-ui-react";
+import Link from "next/link";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Roboto({ weight: "400", subsets: ["latin"] });
 
 export const metadata = {
   title: "Docu-Chain",
@@ -12,8 +15,19 @@ export default function RootLayout({ children }) {
   return (
     <html lang="fr">
       <body className={inter.className}>
-        <h1 className="text-3xl font-bold underline">Docu-Chain !</h1>
-        {children}
+        <Container style={{ marginTop: "3em" }}>
+          <Menu style={{ marginTop: "10px" }}>
+            <MenuItem>
+              <Link href="/">
+                <img src="https://dummyimage.com/100x100/b6bfcc/1b27d1&text=Docu-Chain" alt="Logo de Docu-Chain" />
+              </Link>
+            </MenuItem>
+            <MenuItem position="right">
+              <Link href="/account">Account</Link>
+            </MenuItem>
+          </Menu>
+          {children}
+        </Container>
       </body>
     </html>
   );
