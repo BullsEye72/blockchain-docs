@@ -23,6 +23,7 @@ export default function FileInput({ state, dispatch }) {
   };
 
   const handleFileChange = async (event) => {
+    if (state.fileInputStatus == false) return;
     const selectedFile = event.target.files?.[0] || event.dataTransfer.files[0];
 
     dispatch({ type: "SET_FILE_INFO", payload: null });
@@ -78,7 +79,13 @@ export default function FileInput({ state, dispatch }) {
   };
 
   return (
-    <Segment ref={dropRef} onDrop={handleDrop} onDragLeave={handleDragLeave} onDragEnter={handleDragEnter}>
+    <Segment
+      disabled={!state.fileInputCanUpload}
+      ref={dropRef}
+      onDrop={handleDrop}
+      onDragLeave={handleDragLeave}
+      onDragEnter={handleDragEnter}
+    >
       <Header as="h2">
         <Icon name="upload" />
         Upload your file here
@@ -100,6 +107,7 @@ export default function FileInput({ state, dispatch }) {
             name="fileInput"
             className="border border-gray-300 p-2"
             style={{ display: "none" }}
+            disabled={!state.fileInputCanUpload}
           />
         </FormField>
       </Form>

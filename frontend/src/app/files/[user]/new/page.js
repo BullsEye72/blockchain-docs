@@ -13,6 +13,7 @@ import FileInput from "./FileInput";
 const UPLOAD_SEGMENT_COLOR = "blue";
 
 const initialState = {
+  fileInputCanUpload: true,
   file: null,
   fileInfo: null,
   message: {
@@ -23,10 +24,13 @@ const initialState = {
   isProcessing: false,
   uploadSegmentColor: UPLOAD_SEGMENT_COLOR,
   ethereumTransactionStatus: null,
+  ethereumContractStatus: null,
 };
 
 function reducer(state, action) {
   switch (action.type) {
+    case "SET_FILE_INPUT_CAN_UPLOAD":
+      return { ...state, fileInputCanUpload: action.payload };
     case "SET_FILE":
       return { ...state, file: action.payload };
     case "SET_FILE_INFO":
@@ -41,6 +45,10 @@ function reducer(state, action) {
       return { ...state, isProcessing: action.payload };
     case "SET_UPLOAD_SEGMENT_COLOR":
       return { ...state, uploadSegmentColor: action.payload };
+    case "SET_ETHEREUM_SEGMENT_STATUS":
+      return { ...state, ethereumSegmentStatus: action.payload };
+    case "SET_ETHEREUM_CONTRACT_STATUS":
+      return { ...state, ethereumContractStatus: action.payload };
     case "SET_ETHEREUM_TRANSACTION_STATUS":
       return { ...state, ethereumTransactionStatus: action.payload };
     default:
@@ -48,7 +56,7 @@ function reducer(state, action) {
   }
 }
 
-export default function FileForm() {
+export default function FileForm({ params }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   // Prevent the default behavior of the browser when a file is dragged over the window
@@ -83,7 +91,9 @@ export default function FileForm() {
             <FileInfoSegment fileInfo={state.fileInfo} file={state.file} dispatch={dispatch} />
           ) : (
             <Dimmer active inverted>
-              <Loader inverted>Loading</Loader>
+              <Loader inverted>
+                Calcul du code de vérification du fichier en cours... Veuillez patienter, s'il vous plaît.
+              </Loader>
             </Dimmer>
           )
         ) : (
@@ -91,8 +101,13 @@ export default function FileForm() {
         )}
       </Segment>
 
-      {state.ethereumTransactionStatus ? (
-        <EthereumSegment state={state.ethereumTransactionStatus} />
+      {state.ethereumSegmentStatus ? (
+        <EthereumSegment
+          params={params}
+          fileInfo={state.fileInfo}
+          dispatch={dispatch}
+          state={state.ethereumSegmentStatus}
+        />
       ) : (
         <EthereumSegment state={false} />
       )}

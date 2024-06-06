@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Form, FormField, Checkbox, Button, Header, Icon, Segment, List, ListItem } from "semantic-ui-react";
-import { handleSubmit } from "./FileHandle";
+import { handleSubmit } from "./EthereumSend";
 
 export default function FileInfoSegment({ fileInfo, dispatch }) {
   const fileDateAndTimeText = useMemo(() => {
@@ -27,8 +27,11 @@ export default function FileInfoSegment({ fileInfo, dispatch }) {
     }
 
     if (result.success === true) {
-      dispatch({ type: "SET_ETHEREUM_TRANSACTION_STATUS", payload: true });
-      //dispatch({ type: "SET_UPLOAD_SEGMENT_COLOR", payload: "green" });
+      dispatch({ type: "SET_ETHEREUM_SEGMENT_STATUS", payload: true });
+      dispatch({ type: "SET_FILE_INPUT_CAN_UPLOAD", payload: false });
+    } else {
+      dispatch({ type: "SET_ETHEREUM_SEGMENT_STATUS", payload: false });
+      dispatch({ type: "SET_FILE_INPUT_CAN_UPLOAD", payload: true });
     }
   };
 

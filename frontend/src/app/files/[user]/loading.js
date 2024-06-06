@@ -12,7 +12,7 @@ async function FilesLoading({ params }) {
       <h2 className="text-2xl font-bold mb-4">Files for user ID :</h2>
 
       <CardGroup itemsPerRow={4} stackable>
-        {[...Array(3)].map((_, index) => (
+        {[...Array(1)].map((_, index) => (
           <Card key={index} className="mb-4">
             <Dimmer active inverted>
               <Loader active inline="centered" />
