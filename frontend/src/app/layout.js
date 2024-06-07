@@ -1,7 +1,7 @@
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import "semantic-ui-css/semantic.min.css";
-import { Menu, MenuItem, Container } from "semantic-ui-react";
+import { Menu, MenuItem, Container, Divider } from "semantic-ui-react";
 import Link from "next/link";
 
 const inter = Roboto({ weight: "400", subsets: ["latin"] });
@@ -27,6 +27,7 @@ export default function RootLayout({ children }) {
             </MenuItem>
           </Menu>
           {children}
+          <Divider hidden />
         </Container>
       </body>
     </html>

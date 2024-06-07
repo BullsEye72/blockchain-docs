@@ -38,7 +38,7 @@ async function FilesPage({ params }) {
         const fileContract = new ethers.Contract(fileAddress, FileManagerContract.abi, provider);
         const fileData = await fileContract.getFileContent();
 
-        console.log("filesByOwner (page.js) : ", filesByOwner[i]);
+        // console.log("filesByOwner (page.js) : ", filesByOwner[i]);
 
         files.push({
           name: fileData[0], // ex: 'Test File'

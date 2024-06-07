@@ -1,7 +1,6 @@
 import { Header, Icon, Segment, List } from "semantic-ui-react";
 import { connectToContract, checkManagerRights, sendToEthereum } from "./EthereumSend";
 import { useEffect, useState } from "react";
-import { Link } from "next/link";
 
 export default function EthereumSegment({ params, dispatch, state, fileInfo }) {
   const [isConnected, setIsConnected] = useState(null);
@@ -43,12 +42,14 @@ export default function EthereumSegment({ params, dispatch, state, fileInfo }) {
       if (result.success === false) return false;
 
       setTransactionStatus(0); // 0 = pending
+
       result = await sendToEthereum(params.user, fileInfo);
 
       console.log("Transaction finished in : ", result.elapsedTime);
 
       if (result.success) {
         // The transaction was successful
+        setTransactionAddress(result.contractAddress);
         setTransactionStatus(1); // 1 = success, -1 = fail
       } else {
         if (result.existingAddress) {

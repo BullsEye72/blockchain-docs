@@ -49,22 +49,30 @@ export async function sendToEthereum(user, fileInfo) {
 
   const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
   const contractWithSigner = factoryContract.connect(signer);
-  const filesByOwner = await contractWithSigner.getFilesByOwner(user);
+  let filesByOwner = await contractWithSigner.getFilesByOwner(user);
 
   const fileHashes = filesByOwner.map((file) => file[1]); // 0 = addr , 1 = hash
 
   if (fileHashes.includes(fileInfo.hash)) {
-    return { success: false, message: "File already exists", existingAddress: fileInfo.hash };
+    const fileWithGivenHash = filesByOwner.find((file) => file[1] === fileInfo.hash);
+    const address = fileWithGivenHash[0];
+
+    return { success: false, message: "File already exists", existingAddress: address };
   }
 
   const result = await contractWithSigner.createFile(fileInfo.name, fileInfo.hash, user, fileInfo.lastModified);
-  console.log("Result: ", result);
+  // console.log("Transaction: ", result);
 
-  // simulate a 4 second pause
-  //await new Promise((resolve) => setTimeout(resolve, 4000));
+  // Wait for the transaction to be mined
+  const receipt = await provider.waitForTransaction(result.hash);
+  // console.log("Transaction receipt: ", receipt);
+
+  // Get the address of the new file
+  filesByOwner = await contractWithSigner.getFilesByOwner(user);
+  const newContractAddress = filesByOwner.find((file) => file[1] === fileInfo.hash)[0];
 
   const endTime = Date.now();
   const elapsedTime = endTime - startTime;
 
-  return { success: true, message: "File uploaded successfully", elapsedTime };
+  return { success: true, message: "File uploaded successfully", elapsedTime, contractAddress: newContractAddress };
 }

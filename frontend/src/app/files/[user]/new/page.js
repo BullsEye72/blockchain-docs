@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useReducer, useEffect, useRef } from "react";
-
-import { FormInput, Button, Form, FormField, Segment, Header, Icon, Checkbox } from "semantic-ui-react";
+import React, { useReducer, useEffect } from "react";
+import { Grid, Segment, Header, Icon } from "semantic-ui-react";
 import { Dimmer, Loader } from "semantic-ui-react";
 import DismissibleMessage from "../../../../components/DismissibleMessage";
 import FileInfoSegment from "./FileInfoSegment";
 import EthereumSegment from "./EthereumSegment";
+import { useRouter } from "next/navigation";
 
 import FileInput from "./FileInput";
 
@@ -59,6 +59,8 @@ function reducer(state, action) {
 export default function FileForm({ params }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  const router = useRouter();
+
   // Prevent the default behavior of the browser when a file is dragged over the window
   useEffect(() => {
     const preventDefault = (event) => event.preventDefault();
@@ -78,7 +80,16 @@ export default function FileForm({ params }) {
         <DismissibleMessage type={state.message.type} title={state.message.title} message={state.message.text} />
       )}
 
-      <FileInput state={state} dispatch={dispatch} />
+      <Grid columns={2} stretched>
+        <Grid.Column width={2}>
+          <Segment style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <Icon name="refresh" size="big" className="rotate-icon" onClick={() => window.location.reload()} />
+          </Segment>
+        </Grid.Column>
+        <Grid.Column width={14}>
+          <FileInput state={state} dispatch={dispatch} />
+        </Grid.Column>
+      </Grid>
 
       <Segment disabled={!state.fileInfo}>
         <Header as="h2">
