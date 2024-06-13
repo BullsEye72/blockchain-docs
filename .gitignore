@@ -15,3 +15,7 @@ node_modules
 
 # Hardhat Ignition for deployments
 ignition/
+
+# Visual Studio Code files
+.vscode
+
