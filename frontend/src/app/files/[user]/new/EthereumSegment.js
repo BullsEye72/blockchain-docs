@@ -21,8 +21,6 @@ export default function EthereumSegment({ params, dispatch, state, fileInfo }) {
     if (!dispatch) return;
 
     const connect = async () => {
-      console.log(params);
-
       let result = await connectToContract();
       setIsConnected(result.success);
       dispatch({
@@ -30,7 +28,10 @@ export default function EthereumSegment({ params, dispatch, state, fileInfo }) {
         payload: result.success,
       });
 
-      if (result.success === false) return false;
+      if (result.success === false) {
+        console.warn(result.message);
+        return false;
+      }
 
       result = await checkManagerRights(params.user);
       setIsManager(result.success);
@@ -39,7 +40,10 @@ export default function EthereumSegment({ params, dispatch, state, fileInfo }) {
         payload: result.success,
       });
 
-      if (result.success === false) return false;
+      if (result.success === false) {
+        console.warn(result.message);
+        return false;
+      }
 
       setTransactionStatus(0); // 0 = pending
 
@@ -54,7 +58,6 @@ export default function EthereumSegment({ params, dispatch, state, fileInfo }) {
       } else {
         if (result.existingAddress) {
           // The file already exists in the blockchain
-          console.log("File already exists at address: ", result.existingAddress);
           setTransactionAddress(result.existingAddress);
           setTransactionStatus(2); // 2 = file already exists
         } else {
@@ -130,7 +133,7 @@ export default function EthereumSegment({ params, dispatch, state, fileInfo }) {
               <>
                 <List.Description>Votre fichier à bien été enregistré dans la blockchain !</List.Description>
                 <a
-                  href={`https://sepolia.etherscan.io/address/${transactionAddress}`}
+                  href={`https://sepolia.etherscan.io/tx/${transactionAddress}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -144,7 +147,7 @@ export default function EthereumSegment({ params, dispatch, state, fileInfo }) {
                   Votre fichier existe déjà dans la block-chain, enregistrement annulé.
                 </List.Description>
                 <a
-                  href={`https://sepolia.etherscan.io/address/${transactionAddress}`}
+                  href={`https://sepolia.etherscan.io/tx/${transactionAddress}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
