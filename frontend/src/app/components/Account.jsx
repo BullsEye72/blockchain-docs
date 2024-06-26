@@ -1,9 +1,11 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 function AuthButton() {
+  const router = useRouter();
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -13,7 +15,7 @@ function AuthButton() {
   if (session) {
     return (
       <>
-        {session.user?.name}
+        Logged in as : {session.user?.email}
         <br />
         <button onClick={() => signOut()}>Sign out</button>
       </>
@@ -24,7 +26,7 @@ function AuthButton() {
     <>
       Not signed in <br />
       <button onClick={() => signIn()}>Sign in</button>
-      <button onClick={() => signIn()}>Register</button>
+      <button onClick={() => router.push("/register")}>Register</button>
     </>
   );
 }

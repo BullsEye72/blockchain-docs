@@ -9,5 +9,10 @@ export default async function LoginPage() {
     redirect("/");
   }
 
-  return <Form />;
+  return (
+    <>
+      <h1>Login</h1>
+      <Form />
+    </>
+  );
 }

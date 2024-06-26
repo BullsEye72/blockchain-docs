@@ -2,6 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { FormField, Button, Checkbox, Form, Card, CardContent } from "semantic-ui-react";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -24,10 +25,20 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2 mx-auto max-w-md mt-10">
-      <input name="email" className="border border-black text-black" type="email" />
-      <input name="password" className="border border-black text-black" type="password" />
-      <button type="submit">Login</button>
-    </form>
+    <Card>
+      <CardContent>
+        <Form onSubmit={handleSubmit}>
+          <FormField>
+            <label>E-Mail</label>
+            <input placeholder="address e-mail" type="text" name="email" />
+          </FormField>
+          <FormField>
+            <label>Mot de passe</label>
+            <input type="password" placeholder="" name="password" />
+          </FormField>
+          <Button type="submit">Login</Button>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }
