@@ -19,3 +19,5 @@ ignition/
 # Visual Studio Code files
 .vscode
 
+# Documentation DEV
+docs/dev
