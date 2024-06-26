@@ -114,7 +114,7 @@ async function FilesPage({ params }) {
       //File Data
       name: fileData.name,
       hash: fileData.hash,
-      owner: fileData.Id_owner,
+      owner: fileData.id_user,
       lastModified: new Date(fileData.lastModified).toLocaleDateString(),
       transactionTimestamp: new Date(Date.now()).toLocaleDateString(),
       transactionLink: `https://sepolia.etherscan.io/address/${fileData.transaction_hash}`,

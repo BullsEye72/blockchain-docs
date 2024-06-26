@@ -28,7 +28,7 @@ async function sendNewHash({ userId, hash, txHash, name }) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ hash: hash, Id_owner: userId, name: name, transaction_hash: txHash }),
+      body: JSON.stringify({ hash: hash, id_user: userId, name: name, transaction_hash: txHash }),
     });
 
     if (!request.ok) {

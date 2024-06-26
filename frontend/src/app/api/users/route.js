@@ -1,12 +1,9 @@
+import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
-import pool from "@/app/lib/mysql";
 
 export async function GET() {
   try {
-    const db = await pool.getConnection();
-    const query = "select * from account";
-    const [rows] = await db.query(query);
-    db.release();
+    const { rows } = sql`select * from account`;
 
     return NextResponse.json(rows);
   } catch (error) {
