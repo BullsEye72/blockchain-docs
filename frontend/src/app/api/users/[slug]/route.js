@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import pool from "@/lib/mysql";
+import pool from "@/app/lib/mysql";
 
 export async function GET(request, { params }) {
   const slug = params.slug; // user id
