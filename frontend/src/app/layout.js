@@ -7,6 +7,7 @@ import Account from "./components/Account";
 
 import { getServerSession } from "next-auth";
 import SessionProvider from "./components/SessionProvider";
+import Image from "next/image";
 
 const inter = Roboto({ weight: "400", subsets: ["latin"] });
 
@@ -25,9 +26,19 @@ export default async function RootLayout({ children }) {
             <Menu style={{ marginTop: "10px" }}>
               <MenuItem>
                 <Link href="/">
-                  <img src="https://dummyimage.com/100x100/b6bfcc/1b27d1&text=Docu-Chain" alt="Logo de Docu-Chain" />
+                  <Image
+                    src="https://dummyimage.com/100x100/b6bfcc/1b27d1&text=Docu-Chain"
+                    alt="Logo de Docu-Chain"
+                    width={100}
+                    height={100}
+                  />
                 </Link>
               </MenuItem>
+              {session && (
+                <MenuItem>
+                  <Link href="/files">Files</Link>
+                </MenuItem>
+              )}
               <MenuItem position="right">
                 <Account />
               </MenuItem>

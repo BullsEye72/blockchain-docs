@@ -1,13 +1,38 @@
-import { getServerSession } from "next-auth";
+"use client";
 
-export default async function Page() {
-  const session = await getServerSession();
-  console.log({ session });
+import { Grid, GridColumn, GridRow } from "semantic-ui-react";
+import FileChecker from "./components/FileChecker";
+import { useEffect } from "react";
 
-  return (
-    <>
-      getServerSession result
-      {session?.user?.email ? <div>{session?.user?.email}</div> : <div>Not signed in</div>}
-    </>
-  );
+export default function Page() {
+  // Prevent the default behavior of the browser when a file is dragged over the window
+  useEffect(() => {
+    const preventDefault = (event) => event.preventDefault();
+
+    window.addEventListener("dragover", preventDefault);
+    window.addEventListener("drop", preventDefault);
+
+    return () => {
+      window.removeEventListener("dragover", preventDefault);
+      window.removeEventListener("drop", preventDefault);
+    };
+  });
+
+  try {
+    return (
+      <>
+        <h1>Accueil</h1>
+        <Grid>
+          <GridRow centered columns={3}>
+            <GridColumn>
+              <FileChecker />
+            </GridColumn>
+          </GridRow>
+        </Grid>
+      </>
+    );
+  } catch (error) {
+    console.error("Error in Page:", error);
+    throw error;
+  }
 }

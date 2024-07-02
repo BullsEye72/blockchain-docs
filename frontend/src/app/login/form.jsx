@@ -2,13 +2,17 @@
 
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { FormField, Button, Checkbox, Form, Card, CardContent } from "semantic-ui-react";
+import { useState } from "react";
+import { FormField, Button, Checkbox, Form, Card, CardContent, Message } from "semantic-ui-react";
 
 export default function LoginForm() {
   const router = useRouter();
 
+  const [errorMessage, setErrorMessage] = useState("");
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setErrorMessage("");
 
     const formData = new FormData(event.currentTarget);
 
@@ -18,9 +22,13 @@ export default function LoginForm() {
       redirect: false,
     });
 
+    console.log({ response });
+
     if (response && !response.error) {
       router.push("/");
       router.refresh();
+    } else {
+      setErrorMessage(response.error || "An unknown error occurred");
     }
   };
 
@@ -28,6 +36,9 @@ export default function LoginForm() {
     <Card>
       <CardContent>
         <Form onSubmit={handleSubmit}>
+          <Message negative hidden={!errorMessage}>
+            {errorMessage}
+          </Message>
           <FormField>
             <label>E-Mail</label>
             <input placeholder="address e-mail" type="text" name="email" />
@@ -36,6 +47,7 @@ export default function LoginForm() {
             <label>Mot de passe</label>
             <input type="password" placeholder="" name="password" />
           </FormField>
+
           <Button type="submit">Login</Button>
         </Form>
       </CardContent>

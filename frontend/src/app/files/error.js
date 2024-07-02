@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Button, Message, MessageHeader } from "semantic-ui-react";
 
 export default function FileError({ error, reset }) {
   useEffect(() => {
@@ -8,10 +9,12 @@ export default function FileError({ error, reset }) {
   }, [error]);
 
   return (
-    <>
-      <h2>Something went wrong!</h2>
+    <Message negative>
+      <MessageHeader>Something went wrong!</MessageHeader>
       <p>{error.message}</p>
-      <button onClick={() => reset()}>Try again</button>
-    </>
+      <Button onClick={() => reset()} color="red">
+        Try again
+      </Button>
+    </Message>
   );
 }
