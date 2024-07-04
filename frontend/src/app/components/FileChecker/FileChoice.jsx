@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Button, ButtonGroup, ButtonOr, Icon, Grid, GridRow, GridColumn } from "semantic-ui-react";
+import { Button, Icon, Grid, GridRow } from "semantic-ui-react";
 import FileChecker from "./FileChecker";
-import FileUploaderCard from "./FileUploader";
+
 import FileForm from "@/app/files/new/page";
 
 export default function FileCardSelector() {
-  const [cardType, setCardType] = useState("FileChecker");
   const [checkFileMode, setCheckFileMode] = useState(true);
 
   const handleClick = (e) => {
