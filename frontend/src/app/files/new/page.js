@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useReducer, useEffect } from "react";
-import { Grid, Segment, Header, Icon } from "semantic-ui-react";
+import { Grid, GridRow, GridColumn, Segment, Header, Icon } from "semantic-ui-react";
 import { Dimmer, Loader } from "semantic-ui-react";
 import DismissibleMessage from "../../components/DismissibleMessage";
 import FileInfoSegment from "./FileInfoSegment";
@@ -80,48 +80,45 @@ export default function FileForm({ params }) {
         <DismissibleMessage type={state.message.type} title={state.message.title} message={state.message.text} />
       )}
 
-      <Grid columns={2} stretched>
-        {/* <Grid.Column width={2}>
-          <Segment style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-            <Icon name="refresh" size="big" className="rotate-icon" onClick={() => window.location.reload()} />
-          </Segment>
-        </Grid.Column> */}
-        <Grid.Column width={14}>
-          <FileInput state={state} dispatch={dispatch} />
-        </Grid.Column>
+      <Grid columns={2} divided>
+        <GridRow stretched>
+          <GridColumn>
+            <FileInput state={state} dispatch={dispatch} />
+            <Segment disabled={!state.fileInfo}>
+              <Header as="h2">
+                <Icon name="file text" />
+                Votre fichier :
+              </Header>
+
+              {state.fileInfo ? (
+                state.fileInfo.hash ? (
+                  <FileInfoSegment fileInfo={state.fileInfo} file={state.file} dispatch={dispatch} />
+                ) : (
+                  <Dimmer active inverted>
+                    <Loader inverted>
+                      {"Calcul du code de vérification du fichier en cours... Veuillez patienter, s'il vous plaît."}
+                    </Loader>
+                  </Dimmer>
+                )
+              ) : (
+                <FileInfoSegment fileInfo={null} />
+              )}
+            </Segment>
+          </GridColumn>
+          <GridColumn>
+            {state.ethereumSegmentStatus ? (
+              <EthereumSegment
+                params={params}
+                fileInfo={state.fileInfo}
+                dispatch={dispatch}
+                state={state.ethereumSegmentStatus}
+              />
+            ) : (
+              <EthereumSegment state={false} />
+            )}
+          </GridColumn>
+        </GridRow>
       </Grid>
-
-      <Segment disabled={!state.fileInfo}>
-        <Header as="h2">
-          <Icon name="file text" />
-          File Information
-        </Header>
-
-        {state.fileInfo ? (
-          state.fileInfo.hash ? (
-            <FileInfoSegment fileInfo={state.fileInfo} file={state.file} dispatch={dispatch} />
-          ) : (
-            <Dimmer active inverted>
-              <Loader inverted>
-                {"Calcul du code de vérification du fichier en cours... Veuillez patienter, s'il vous plaît."}
-              </Loader>
-            </Dimmer>
-          )
-        ) : (
-          <FileInfoSegment fileInfo={null} />
-        )}
-      </Segment>
-
-      {state.ethereumSegmentStatus ? (
-        <EthereumSegment
-          params={params}
-          fileInfo={state.fileInfo}
-          dispatch={dispatch}
-          state={state.ethereumSegmentStatus}
-        />
-      ) : (
-        <EthereumSegment state={false} />
-      )}
     </>
   );
 }

@@ -86,10 +86,6 @@ export default function FileInput({ state, dispatch }) {
       onDragLeave={handleDragLeave}
       onDragEnter={handleDragEnter}
     >
-      <Header as="h2">
-        <Icon name="upload" />
-        Upload your file here
-      </Header>
       <Form>
         <FormField>
           <Button
@@ -97,9 +93,11 @@ export default function FileInput({ state, dispatch }) {
             size="huge"
             as="label"
             htmlFor="fileInput"
-            content="Choose File"
             disabled={state.isProcessing}
-          />
+          >
+            <Icon name="upload" />
+            Charger un fichier
+          </Button>
           <input
             type="file"
             id="fileInput"

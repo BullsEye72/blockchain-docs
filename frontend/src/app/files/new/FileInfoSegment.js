@@ -42,7 +42,8 @@ export default function FileInfoSegment({ fileInfo, dispatch }) {
           <List>
             <ListItem icon="file text" content={fileInfo.name} />
             <ListItem icon="calendar" content={fileDateAndTimeText} />
-            <ListItem icon="hashtag" content={`${fileInfo.hash} (${fileInfo.processingTime}ms)`} />
+            <ListItem icon="hashtag" style={{ wordWrap: "anywhere" }} content={`${fileInfo.hash}`} />
+            <ListItem icon="time" content={`Calculé en ${fileInfo.processingTime}ms`} />
           </List>
           <FormField>
             <Checkbox label="I agree to the Terms and Conditions" />
