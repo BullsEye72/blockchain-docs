@@ -4,34 +4,40 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button, Header, Segment } from "semantic-ui-react";
 
-function AuthButton() {
+function AuthButton({ fixed }) {
   const router = useRouter();
   const { data: session } = useSession();
 
   if (session) {
     return (
-      <Segment textAlign="center">
-        <Header as="h3">
+      <>
+        <p>
           Logged in as:
           <br /> {session.user?.email}
-        </Header>
-        <Button color="red" onClick={() => signOut()}>
+        </p>
+
+        <Button as="a" inverted={!fixed} onClick={() => signOut()}>
           Sign out
         </Button>
-      </Segment>
+      </>
     );
   }
 
   return (
-    <Segment textAlign="center">
-      <Header as="h3">Not signed in</Header>
-      <Button primary onClick={() => signIn()}>
-        Sign in
+    <>
+      <Button as="a" inverted={!fixed} onClick={() => signIn()}>
+        Log in
       </Button>
-      <Button secondary onClick={() => router.push("/register")}>
-        Register
+      <Button
+        as="a"
+        inverted={!fixed}
+        primary={fixed}
+        style={{ marginLeft: "0.5em" }}
+        onClick={() => router.push("/register")}
+      >
+        Sign Up
       </Button>
-    </Segment>
+    </>
   );
 }
 

@@ -21,7 +21,6 @@ export default function Page() {
   try {
     return (
       <>
-        <h1>Accueil</h1>
         <Grid>
           <GridRow centered columns={3}>
             <GridColumn>

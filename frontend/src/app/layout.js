@@ -1,13 +1,13 @@
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import "semantic-ui-css/semantic.min.css";
-import { Menu, MenuItem, Container, Divider } from "semantic-ui-react";
-import Link from "next/link";
-import Account from "./components/Account";
+import { Container, Divider, Segment, Header, Button } from "semantic-ui-react";
 
 import { getServerSession } from "next-auth";
 import SessionProvider from "./components/SessionProvider";
-import Image from "next/image";
+
+import HeaderMenu from "./components/layout/HeaderMenu";
+import Footer from "./components/layout/Footer";
 
 const inter = Roboto({ weight: "400", subsets: ["latin"] });
 
@@ -22,30 +22,11 @@ export default async function RootLayout({ children }) {
     <html lang="fr">
       <body className={inter.className}>
         <SessionProvider session={session}>
-          <Container style={{ marginTop: "3em" }}>
-            <Menu style={{ marginTop: "10px" }}>
-              <MenuItem>
-                <Link href="/">
-                  <Image
-                    src="https://dummyimage.com/100x100/b6bfcc/1b27d1&text=Docu-Chain"
-                    alt="Logo de Docu-Chain"
-                    width={100}
-                    height={100}
-                  />
-                </Link>
-              </MenuItem>
-              {session && (
-                <MenuItem>
-                  <Link href="/files">Files</Link>
-                </MenuItem>
-              )}
-              <MenuItem position="right">
-                <Account />
-              </MenuItem>
-            </Menu>
-            {children}
-            <Divider hidden />
-          </Container>
+          <HeaderMenu />
+
+          {children}
+
+          <Footer />
         </SessionProvider>
       </body>
     </html>

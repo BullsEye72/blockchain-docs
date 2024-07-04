@@ -1,4 +1,14 @@
-import { Card, CardContent, CardHeader, CardMeta, CardDescription, Icon, List } from "semantic-ui-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardMeta,
+  CardDescription,
+  Icon,
+  List,
+  Segment,
+  Container,
+} from "semantic-ui-react";
 import { useState, useRef, useEffect } from "react";
 import { checkIfFileExistsOnDatabase } from "../api/files/route";
 import { useSession } from "next-auth/react";
@@ -71,72 +81,76 @@ export default function FileChecker() {
   };
 
   return (
-    <Card
-      ref={dropRef}
-      onDrop={handleDrop}
-      onDragLeave={handleDragLeave}
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-    >
-      <CardContent>
-        <CardHeader>Check if file exists</CardHeader>
-        <CardMeta>
-          <span className="date">Drop a file here to check if it is already known</span>
-        </CardMeta>
+    <Segment style={{ padding: "8em 0em" }} vertical>
+      <Container text>
+        <Card
+          ref={dropRef}
+          onDrop={handleDrop}
+          onDragLeave={handleDragLeave}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+        >
+          <CardContent>
+            <CardHeader>Check if file exists</CardHeader>
+            <CardMeta>
+              <span className="date">Drop a file here to check if it is already known</span>
+            </CardMeta>
 
-        {checkStatus === 0 && (
-          <CardDescription>
-            <Icon name="clock outline" />
-            Waiting for file...
-          </CardDescription>
-        )}
-        {checkStatus === 1 && (
-          <CardDescription>
-            <Icon name="spinner" />
-            Checking...
-          </CardDescription>
-        )}
-        {checkStatus === 2 && (
-          <CardDescription>
-            <Icon name="check" color="green" />
-            File found
-          </CardDescription>
-        )}
-        {checkStatus === 3 && (
-          <CardDescription>
-            <Icon name="exclamation triangle" color="orange" />
-            File not found
-          </CardDescription>
-        )}
-      </CardContent>
-      <CardContent extra>
-        {checkStatus === 2 ? (
-          <a>
-            <Icon name="ethereum" color="teal" />
-            Check on etherscan
-          </a>
-        ) : (
-          <a>
-            <Icon name="plus" color="blue" />
-            Ajouter un nouveau fichier sur la blockchain !
-          </a>
-        )}
-      </CardContent>
-      {checkStatus === 2 && (
-        <CardContent extra>
-          <List>
-            <List.Item>
-              <Icon name="file" />
-              <List.Header>File details</List.Header>
-              <List.Content>
-                <List.Description>File name: </List.Description>
-                <List.Description>Owner: </List.Description>
-                <List.Description>Transaction hash: </List.Description>
-              </List.Content>
-            </List.Item>
-          </List>
-        </CardContent>
-      )}
-    </Card>
+            {checkStatus === 0 && (
+              <CardDescription>
+                <Icon name="clock outline" />
+                Waiting for file...
+              </CardDescription>
+            )}
+            {checkStatus === 1 && (
+              <CardDescription>
+                <Icon name="spinner" />
+                Checking...
+              </CardDescription>
+            )}
+            {checkStatus === 2 && (
+              <CardDescription>
+                <Icon name="check" color="green" />
+                File found
+              </CardDescription>
+            )}
+            {checkStatus === 3 && (
+              <CardDescription>
+                <Icon name="exclamation triangle" color="orange" />
+                File not found
+              </CardDescription>
+            )}
+          </CardContent>
+          <CardContent extra>
+            {checkStatus === 2 ? (
+              <a>
+                <Icon name="ethereum" color="teal" />
+                Check on etherscan
+              </a>
+            ) : (
+              <a>
+                <Icon name="plus" color="blue" />
+                Ajouter un nouveau fichier sur la blockchain !
+              </a>
+            )}
+          </CardContent>
+          {checkStatus === 2 && (
+            <CardContent extra>
+              <List>
+                <List.Item>
+                  <Icon name="file" />
+                  <List.Header>File details</List.Header>
+                  <List.Content>
+                    <List.Description>File name: </List.Description>
+                    <List.Description>Owner: </List.Description>
+                    <List.Description>Transaction hash: </List.Description>
+                  </List.Content>
+                </List.Item>
+              </List>
+            </CardContent>
+          )}
+        </Card>
+      </Container>
+    </Segment>
   );
 }
