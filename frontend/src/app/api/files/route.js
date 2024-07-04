@@ -9,6 +9,7 @@ export async function checkIfFileExistsOnDatabase(hash) {
 
     return rows.length > 0;
   } catch (error) {
+    console.error("Error in checkIfFileExistsOnDatabase:", error);
     return false;
   }
 }

@@ -2,7 +2,7 @@ import { Header, Icon, Segment, List } from "semantic-ui-react";
 import { connectToContract, checkManagerRights, sendToEthereum } from "./EthereumSend";
 import { useEffect, useState } from "react";
 
-export default function EthereumSegment({ params, dispatch, state, fileInfo }) {
+export default function EthereumSegment({ dispatch, state, fileInfo }) {
   const [isConnected, setIsConnected] = useState(null);
   const [isManager, setIsManager] = useState(null);
   const [transactionStatus, setTransactionStatus] = useState(null);
@@ -33,7 +33,7 @@ export default function EthereumSegment({ params, dispatch, state, fileInfo }) {
         return false;
       }
 
-      result = await checkManagerRights(params.user);
+      result = await checkManagerRights();
       setIsManager(result.success);
       dispatch({
         type: "SET_ETHEREUM_MANAGER_STATUS",

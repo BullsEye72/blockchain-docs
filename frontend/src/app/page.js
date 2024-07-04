@@ -1,7 +1,6 @@
 "use client";
 
-import { Grid, GridColumn, GridRow } from "semantic-ui-react";
-import FileChecker from "./components/FileChecker";
+import { Grid, GridColumn, GridRow, Header, Container } from "semantic-ui-react";
 import { useEffect } from "react";
 
 export default function Page() {
@@ -19,17 +18,7 @@ export default function Page() {
   });
 
   try {
-    return (
-      <>
-        <Grid>
-          <GridRow centered columns={3}>
-            <GridColumn>
-              <FileChecker />
-            </GridColumn>
-          </GridRow>
-        </Grid>
-      </>
-    );
+    return <Header as="h2">Accueil</Header>;
   } catch (error) {
     console.error("Error in Page:", error);
     throw error;

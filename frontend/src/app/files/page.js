@@ -57,7 +57,7 @@ async function FilesPage() {
         <p>Total Files: {files.length}</p>
 
         <CardGroup itemsPerRow={3} stackable>
-          <Card as={Link} href={`/files/new`} className="add-new-file">
+          {/* <Card as={Link} href={`/files/new`} className="add-new-file">
             <CardContent textAlign="center">
               <Grid centered columns={1} style={{ height: "100%" }}>
                 <GridColumn verticalAlign="middle">
@@ -65,7 +65,7 @@ async function FilesPage() {
                 </GridColumn>
               </Grid>
             </CardContent>
-          </Card>
+          </Card> */}
           {files.map((file, index) => (
             <FileCard checkIfFileExistsOnBlockchain={checkIfFileExistsOnBlockchain} file={file} key={index} />
           ))}

@@ -81,11 +81,11 @@ export default function FileForm({ params }) {
       )}
 
       <Grid columns={2} stretched>
-        <Grid.Column width={2}>
+        {/* <Grid.Column width={2}>
           <Segment style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
             <Icon name="refresh" size="big" className="rotate-icon" onClick={() => window.location.reload()} />
           </Segment>
-        </Grid.Column>
+        </Grid.Column> */}
         <Grid.Column width={14}>
           <FileInput state={state} dispatch={dispatch} />
         </Grid.Column>

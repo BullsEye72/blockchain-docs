@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Container, Header, Icon } from "semantic-ui-react";
+import { Container, Header, Icon } from "semantic-ui-react";
+import FileCardSelector from "../FileChecker/FileChoice";
 
 /* Heads up!
  * HomepageHeading uses inline styling, however it's not the best practice. Use CSS or styled
@@ -12,7 +13,7 @@ export default function HomepageHeading({ mobile }) {
       {" "}
       <Header
         as="h1"
-        content="Imagine-a-Company"
+        content="DocuChain"
         inverted
         style={{
           fontSize: mobile ? "2em" : "4em",
@@ -23,7 +24,7 @@ export default function HomepageHeading({ mobile }) {
       />
       <Header
         as="h2"
-        content="Do whatever you want when you want to."
+        content="Sécurisez vos documents avec la blockchain !"
         inverted
         style={{
           fontSize: mobile ? "1.5em" : "1.7em",
@@ -31,10 +32,7 @@ export default function HomepageHeading({ mobile }) {
           marginTop: mobile ? "0.5em" : "1.5em",
         }}
       />
-      <Button primary size="huge">
-        Get Started
-        <Icon name="right arrow" />
-      </Button>
+      <FileCardSelector />
     </Container>
   );
 }
