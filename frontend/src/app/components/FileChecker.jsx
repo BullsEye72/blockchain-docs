@@ -1,23 +1,14 @@
 import { Card, CardContent, CardHeader, CardMeta, CardDescription, Icon, List } from "semantic-ui-react";
 import { useState, useRef, useEffect } from "react";
+import { checkIfFileExistsOnDatabase } from "../api/files/route";
+import { useSession } from "next-auth/react";
 
 const crypto = require("crypto");
 
-async function getData() {
-  try {
-    const res = await fetch(`http://localhost:3000/api/files/`);
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch data");
-    }
-    return res.json();
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    return [];
-  }
-}
-
 export default function FileChecker() {
+  const { data: session, status } = useSession();
+  console.log("Session:", session, "Status:", status);
+
   const [files, setFiles] = useState([]);
   const [checkStatus, setCheckStatus] = useState(0); // 0 = idle, 1 = checking, 2 = file found, 3 = file not found, -1 = error
   const [isDragOver, setIsDragOver] = useState(false);
@@ -63,9 +54,11 @@ export default function FileChecker() {
       console.log("Checksum:", checksum);
 
       // Check if the file exists
-      const data = await getData();
-      const hashes = data.map((file) => file.hash);
-      if (hashes.includes(checksum)) {
+      //const data = await getData();
+
+      const fileExistsInDatabase = await checkIfFileExistsOnDatabase(checksum);
+
+      if (fileExistsInDatabase) {
         setCheckStatus(2); // file found
       } else {
         setCheckStatus(3); // file not found
@@ -75,22 +68,6 @@ export default function FileChecker() {
     fileReader.readAsArrayBuffer(selectedFile);
 
     return;
-  };
-
-  const updateFiles = async () => {
-    try {
-      const res = await fetch("http://localhost:3000/api/files/");
-
-      if (!res.ok) {
-        throw new Error("Failed to fetch data");
-      }
-
-      const files = await res.json();
-      setFiles(files);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setFiles([]);
-    }
   };
 
   return (

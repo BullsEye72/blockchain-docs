@@ -4,6 +4,7 @@ import FileStorageContract from "../../../contracts/FileStorage";
 import { getServerSession } from "next-auth";
 import { sql } from "@vercel/postgres";
 import { storeFile } from "@/app/actions";
+import { getFileHashes } from "@/app/api/files/route";
 
 const provider = new InfuraProvider("sepolia", process.env.INFURA_API_KEY);
 const factoryContract = new ethers.Contract(
@@ -11,18 +12,6 @@ const factoryContract = new ethers.Contract(
   FileStorageContract.abi,
   provider
 );
-
-async function getFileHashes() {
-  const res = await fetch("http://localhost:3000/api/files/process");
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch data");
-  }
-
-  const hashesJson = await res.json();
-
-  return hashesJson;
-}
 
 export async function handleSubmit(formData) {
   // handle form submission on the server
@@ -78,9 +67,9 @@ export async function sendToEthereum(fileInfo) {
   const knownHashes = await getFileHashes();
 
   for (let file of knownHashes) {
-    console.log("File hash:", file.hash, "FileInfo hash:", fileInfo.hash);
     if (file.hash === fileInfo.hash) {
       console.log("File already exists:", file.transaction_hash);
+      //console.log({ file });
       return { success: false, message: "File already exists", existingAddress: file.transaction_hash };
     }
   }
@@ -98,7 +87,6 @@ export async function sendToEthereum(fileInfo) {
     console.log({ storeResult });
     return { success: false, message: "Database error" };
   }
-  return { foo: "bar" };
 
   // Send the file hash to the contract
   const result = await contractWithSigner.storeFile(fileInfo.hash, userId);

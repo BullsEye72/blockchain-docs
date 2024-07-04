@@ -31,7 +31,7 @@ export async function storeFile(data) {
   // console.log("StoreFile: ", data);
 
   const { userId, hash, name } = data;
-  // console.log("Id_user:", userId, "hash:", hash, "name:", name, "transaction_hash:", transaction_hash);
+  //console.log({ userId, hash, name });
 
   if (!userId || !hash || !name) {
     return NextResponse.json({ error: "Missing arguments" }, { status: 400 });
