@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button, Icon, Grid, GridRow, Container } from "semantic-ui-react";
 import FileChecker from "./FileChecker";
 
-import FileForm from "@/app/files/new/page";
+import FileSaver from "@/app/files/new/FileSaver";
 
 export default function FileCardSelector() {
   const [checkFileMode, setCheckFileMode] = useState(true);
@@ -29,7 +29,7 @@ export default function FileCardSelector() {
         </GridRow>
       </Grid>
 
-      {checkFileMode ? <FileChecker /> : <FileForm />}
+      {checkFileMode ? <FileChecker /> : <FileSaver />}
     </Container>
   );
 }

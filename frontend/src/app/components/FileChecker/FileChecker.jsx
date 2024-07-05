@@ -11,11 +11,12 @@ import {
   ListHeader,
   Popup,
   Container,
-  TransitionGroup,
+  DimmerDimmable,
+  Dimmer,
+  Header,
 } from "semantic-ui-react";
 import { useState, useRef } from "react";
 import { checkIfFileExistsOnDatabase } from "../../api/files/route";
-import Link from "next/link";
 
 const crypto = require("crypto");
 
@@ -79,6 +80,7 @@ export default function FileChecker() {
       } else {
         setCheckStatus(3); // file not found
         setFileData(null);
+        setFileHash("No Hash");
       }
     };
 
@@ -87,10 +89,12 @@ export default function FileChecker() {
     return;
   };
 
-  const truncateHash = (hash) => {
+  const truncateHash = (hash = "") => {
     if (hash.length <= 12) return hash;
     return `${hash.substring(0, 6)}...${hash.substring(hash.length - 6)}`;
   };
+
+  console.log({ checkStatus });
 
   return (
     <CardGroup centered>
@@ -133,72 +137,72 @@ export default function FileChecker() {
           )}
         </CardContent>
       </Card>
-      {checkStatus === 2 && (
-        <Card>
-          <CardContent>
-            <CardHeader>
-              <Icon name="file" />
-              Informations
-            </CardHeader>
-            <CardDescription>
-              <List>
+
+      <DimmerDimmable as={Card} blurring dimmed={checkStatus !== 2}>
+        <Dimmer inverted active={checkStatus !== 2}>
+          <Header as="h2" icon>
+            <Icon name="file " color="grey" />
+          </Header>
+        </Dimmer>
+
+        <CardContent>
+          <CardHeader>
+            <Icon name="file" />
+            Informations
+          </CardHeader>
+          <CardDescription>
+            <List>
+              <ListItem>
+                <ListHeader>Code de vérification :</ListHeader>
+                <Popup
+                  trigger={
+                    <Container>
+                      {truncateHash(fileHash)}
+                      <Icon
+                        name="copy outline"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => navigator.clipboard.writeText(fileHash)}
+                      />
+                    </Container>
+                  }
+                  content={fileHash}
+                />
+              </ListItem>
+
+              <ListItem>
+                <ListHeader>Transaction hash :</ListHeader>
+
+                <Popup
+                  trigger={
+                    <Container>
+                      {truncateHash(fileData?.transaction_hash)}
+                      <Icon
+                        name="copy outline"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => navigator.clipboard.writeText(fileData.transaction_hash)}
+                      />
+                    </Container>
+                  }
+                  content={fileData?.transaction_hash}
+                />
+              </ListItem>
+
+              {checkStatus === 2 && (
                 <ListItem>
-                  <ListHeader>Code de vérification :</ListHeader>
-                  <Popup
-                    trigger={
-                      <Container>
-                        {truncateHash(fileHash)}
-                        <Icon
-                          name="copy outline"
-                          style={{ cursor: "pointer" }}
-                          onClick={() => navigator.clipboard.writeText(fileHash)}
-                        />
-                      </Container>
-                    }
-                    content={fileHash}
-                  />
+                  <a
+                    href={`https://etherscan.io/tx/${fileData.transaction_hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Icon name="ethereum" color="teal" />
+                    Vérifier sur Etherscan <Icon name="external alternate" size="small" />
+                  </a>
                 </ListItem>
-
-                <ListItem>
-                  <ListHeader>Transaction hash :</ListHeader>
-
-                  <Popup
-                    trigger={
-                      <Container>
-                        {truncateHash(fileData.transaction_hash)}
-                        <Icon
-                          name="copy outline"
-                          style={{ cursor: "pointer" }}
-                          onClick={() => navigator.clipboard.writeText(fileData.transaction_hash)}
-                        />
-                      </Container>
-                    }
-                    content={fileData.transaction_hash}
-                  />
-                </ListItem>
-
-                {checkStatus === 2 ? (
-                  <ListItem>
-                    <a
-                      href={`https://etherscan.io/tx/${fileData.transaction_hash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Icon name="ethereum" color="teal" />
-                      Vérifier sur Etherscan <Icon name="external alternate" size="small" />
-                    </a>
-                  </ListItem>
-                ) : (
-                  <ListItem>
-                    <Icon name="plus" color="blue" />
-                    Ajouter un nouveau fichier sur la blockchain !
-                  </ListItem>
-                )}
-              </List>
-            </CardDescription>
-          </CardContent>
-        </Card>
-      )}
+              )}
+            </List>
+          </CardDescription>
+        </CardContent>
+      </DimmerDimmable>
     </CardGroup>
   );
 }
