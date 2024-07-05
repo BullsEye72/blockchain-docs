@@ -1,5 +1,4 @@
-import { Grid, GridColumn, Card, CardContent, CardGroup, Icon, Segment, Container } from "semantic-ui-react";
-import Link from "next/link";
+import { Container, Table, TableHeader, TableHeaderCell, TableRow, TableBody, Header } from "semantic-ui-react";
 import { getFiles } from "../actions";
 import FileCard from "../components/FileCard";
 import { getServerSession } from "next-auth";
@@ -51,27 +50,40 @@ async function FilesPage() {
   }
 
   return (
-    <Segment style={{ padding: "4em 0em" }} vertical>
-      <Container text>
-        <h2>Files for user : {session?.user?.email}</h2>
-        <p>Total Files: {files.length}</p>
+    <Container text>
+      <Header as="h2">Vos Documents</Header>
+      <p>Nombre total de documents : {files.length}</p>
 
-        <CardGroup itemsPerRow={3} stackable>
-          {/* <Card as={Link} href={`/files/new`} className="add-new-file">
-            <CardContent textAlign="center">
-              <Grid centered columns={1} style={{ height: "100%" }}>
-                <GridColumn verticalAlign="middle">
-                  <Icon name="add circle" size="huge" />
-                </GridColumn>
-              </Grid>
-            </CardContent>
-          </Card> */}
+      <Table celled striped>
+        <TableHeader>
+          <TableRow>
+            <TableHeaderCell rowSpan="2" colSpan="3">
+              Files
+            </TableHeaderCell>
+            <TableHeaderCell rowSpan="2" colSpan="1">
+              Enregistrement DocuChain
+            </TableHeaderCell>
+            <TableHeaderCell colSpan="3">Enregistrement BlockChain</TableHeaderCell>
+          </TableRow>
+          <TableRow>
+            <TableHeaderCell>Etat</TableHeaderCell>
+            <TableHeaderCell>Date</TableHeaderCell>
+            <TableHeaderCell>Etherscan</TableHeaderCell>
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
           {files.map((file, index) => (
-            <FileCard checkIfFileExistsOnBlockchain={checkIfFileExistsOnBlockchain} file={file} key={index} />
+            <FileCard
+              checkIfFileExistsOnBlockchain={checkIfFileExistsOnBlockchain}
+              file={file}
+              key={index}
+              table={true}
+            />
           ))}
-        </CardGroup>
-      </Container>
-    </Segment>
+        </TableBody>
+      </Table>
+    </Container>
   );
 }
 

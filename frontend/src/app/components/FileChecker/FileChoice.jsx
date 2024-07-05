@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Icon, Grid, GridRow } from "semantic-ui-react";
+import { Button, Icon, Grid, GridRow, Container } from "semantic-ui-react";
 import FileChecker from "./FileChecker";
 
 import FileForm from "@/app/files/new/page";
@@ -26,14 +26,9 @@ export default function FileCardSelector() {
           Enregister mon fichier
         </Button>
       </GridRow>
-
-      {checkFileMode ? (
-        <FileChecker />
-      ) : (
-        <GridRow centered columns={1}>
-          <FileForm />
-        </GridRow>
-      )}
+      <Container text style={{ border: "1px solid red" }}>
+        {checkFileMode ? <FileChecker /> : <FileForm />}
+      </Container>
     </Grid>
   );
 }
