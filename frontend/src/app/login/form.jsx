@@ -3,7 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FormField, Button, Checkbox, Form, Card, CardContent, Message } from "semantic-ui-react";
+import { FormField, Button, Checkbox, Form, Card, CardContent, Message, CardHeader } from "semantic-ui-react";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -35,6 +35,7 @@ export default function LoginForm() {
   return (
     <Card>
       <CardContent>
+        <CardHeader>Login</CardHeader>
         <Form onSubmit={handleSubmit}>
           <Message negative hidden={!errorMessage}>
             {errorMessage}

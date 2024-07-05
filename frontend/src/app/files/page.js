@@ -1,4 +1,15 @@
-import { Container, Table, TableHeader, TableHeaderCell, TableRow, TableBody, Header } from "semantic-ui-react";
+import {
+  Container,
+  Table,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+  TableBody,
+  Header,
+  TableCell,
+  Icon,
+  Segment,
+} from "semantic-ui-react";
 import { getFiles } from "../actions";
 import FileCard from "../components/FileCard";
 import { getServerSession } from "next-auth";
@@ -50,7 +61,7 @@ async function FilesPage() {
   }
 
   return (
-    <Container text>
+    <Segment>
       <Header as="h2">Vos Documents</Header>
       <p>Nombre total de documents : {files.length}</p>
 
@@ -73,17 +84,27 @@ async function FilesPage() {
         </TableHeader>
 
         <TableBody>
-          {files.map((file, index) => (
-            <FileCard
-              checkIfFileExistsOnBlockchain={checkIfFileExistsOnBlockchain}
-              file={file}
-              key={index}
-              table={true}
-            />
-          ))}
+          {files.length === 0 && (
+            <TableRow>
+              <TableCell textAlign="center">
+                <Icon name="question circle" />
+              </TableCell>
+              <TableCell colSpan="6">Aucun document enregistré</TableCell>
+            </TableRow>
+          )}
+
+          {files.length > 0 &&
+            files.map((file, index) => (
+              <FileCard
+                checkIfFileExistsOnBlockchain={checkIfFileExistsOnBlockchain}
+                file={file}
+                key={index}
+                table={true}
+              />
+            ))}
         </TableBody>
       </Table>
-    </Container>
+    </Segment>
   );
 }
 

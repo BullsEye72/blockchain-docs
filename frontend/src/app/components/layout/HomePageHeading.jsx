@@ -1,6 +1,6 @@
 "use client";
 
-import { Container, Header, Icon } from "semantic-ui-react";
+import { Container, Header } from "semantic-ui-react";
 import FileCardSelector from "../FileChecker/FileChoice";
 
 /* Heads up!

@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardMeta, CardDescription, Icon, List, CardGroup } from "semantic-ui-react";
 import { useState, useRef } from "react";
 import { checkIfFileExistsOnDatabase } from "../../api/files/route";
-import { useSession } from "next-auth/react";
 
 const crypto = require("crypto");
 
@@ -66,7 +65,7 @@ export default function FileChecker() {
   };
 
   return (
-    <CardGroup>
+    <CardGroup centered>
       <Card
         ref={dropRef}
         onDrop={handleDrop}

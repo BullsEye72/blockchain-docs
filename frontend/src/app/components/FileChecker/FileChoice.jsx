@@ -14,21 +14,22 @@ export default function FileCardSelector() {
   };
 
   return (
-    <Grid>
-      <GridRow centered columns={2}>
-        <Button toggle active={checkFileMode} onClick={handleClick} size="huge" attached="left">
-          <Icon name="search" />
-          Vérifier mon fichier
-        </Button>
+    <Container>
+      <Grid>
+        <GridRow centered columns={2}>
+          <Button toggle active={checkFileMode} onClick={handleClick} size="huge" attached="left">
+            <Icon name="search" />
+            Vérifier mon fichier
+          </Button>
 
-        <Button toggle active={!checkFileMode} onClick={handleClick} size="huge" attached="right">
-          <Icon name="save" />
-          Enregister mon fichier
-        </Button>
-      </GridRow>
-      <Container text style={{ border: "1px solid red" }}>
-        {checkFileMode ? <FileChecker /> : <FileForm />}
-      </Container>
-    </Grid>
+          <Button toggle active={!checkFileMode} onClick={handleClick} size="huge" attached="right">
+            <Icon name="save" />
+            Enregister mon fichier
+          </Button>
+        </GridRow>
+      </Grid>
+
+      {checkFileMode ? <FileChecker /> : <FileForm />}
+    </Container>
   );
 }

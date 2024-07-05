@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import React, { useState } from "react";
-import { FormField, Button, Checkbox, Form, Card, CardContent, Message } from "semantic-ui-react";
+import { FormField, Button, Checkbox, Form, Card, CardContent, Message, CardHeader } from "semantic-ui-react";
 
 export default function RegisterForm() {
   const [agreeToTerms, setAgreeToTerms] = useState(false);
@@ -47,6 +47,7 @@ export default function RegisterForm() {
   return (
     <Card>
       <CardContent>
+        <CardHeader>Créer un compte</CardHeader>
         <Form onSubmit={handleSubmit}>
           <Message negative hidden={!errorMessage}>
             {errorMessage}
