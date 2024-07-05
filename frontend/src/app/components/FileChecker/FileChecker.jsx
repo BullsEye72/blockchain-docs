@@ -1,12 +1,29 @@
-import { Card, CardContent, CardHeader, CardMeta, CardDescription, Icon, List, CardGroup } from "semantic-ui-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardMeta,
+  CardDescription,
+  Icon,
+  List,
+  CardGroup,
+  ListItem,
+  ListHeader,
+  Popup,
+  Container,
+  TransitionGroup,
+} from "semantic-ui-react";
 import { useState, useRef } from "react";
 import { checkIfFileExistsOnDatabase } from "../../api/files/route";
+import Link from "next/link";
 
 const crypto = require("crypto");
 
 export default function FileChecker() {
   const [checkStatus, setCheckStatus] = useState(0); // 0 = idle, 1 = checking, 2 = file found, 3 = file not found, -1 = error
   const [isDragOver, setIsDragOver] = useState(false);
+  const [fileData, setFileData] = useState(null);
+  const [fileHash, setFileHash] = useState("");
   const dropRef = useRef();
 
   const handleDrop = (event) => {
@@ -44,6 +61,7 @@ export default function FileChecker() {
       const hash = crypto.createHash("sha256");
       hash.update(buffer);
       const checksum = hash.digest("hex");
+      setFileHash(checksum);
       // console.log("Checksum:", checksum);
 
       // Check if the file exists
@@ -54,14 +72,24 @@ export default function FileChecker() {
 
       if (fileExistsInDatabase) {
         setCheckStatus(2); // file found
+        setFileData({
+          transaction_hash: fileExistsInDatabase.transaction_hash,
+          lastmodified: fileExistsInDatabase.lastmodified,
+        });
       } else {
         setCheckStatus(3); // file not found
+        setFileData(null);
       }
     };
 
     fileReader.readAsArrayBuffer(selectedFile);
 
     return;
+  };
+
+  const truncateHash = (hash) => {
+    if (hash.length <= 12) return hash;
+    return `${hash.substring(0, 6)}...${hash.substring(hash.length - 6)}`;
   };
 
   return (
@@ -74,64 +102,100 @@ export default function FileChecker() {
         onDragOver={handleDragOver}
       >
         <CardContent>
-          <CardHeader>Check if file exists</CardHeader>
+          <CardHeader>Vérifier si le fichier est connu</CardHeader>
           <CardMeta>
-            <span className="date">Drop a file here to check if it is already known</span>
+            <span className="date">Déposez un fichier ici pour vérifier s'il est déjà connu</span>
           </CardMeta>
 
           {checkStatus === 0 && (
             <CardDescription>
               <Icon name="clock outline" />
-              Waiting for file...
+              En attente d'un fichier...
             </CardDescription>
           )}
           {checkStatus === 1 && (
             <CardDescription>
               <Icon name="spinner" />
-              Checking...
+              Calcul et vérification...
             </CardDescription>
           )}
           {checkStatus === 2 && (
             <CardDescription>
-              <Icon name="check" color="green" />
-              File found
+              <Icon name="check green" size="huge" />
+              Fichier identifié !
             </CardDescription>
           )}
           {checkStatus === 3 && (
             <CardDescription>
               <Icon name="exclamation triangle" color="orange" />
-              File not found
+              Fichier non trouvé
             </CardDescription>
-          )}
-        </CardContent>
-        <CardContent extra>
-          {checkStatus === 2 ? (
-            <a>
-              <Icon name="ethereum" color="teal" />
-              Check on etherscan
-            </a>
-          ) : (
-            <a>
-              <Icon name="plus" color="blue" />
-              Ajouter un nouveau fichier sur la blockchain !
-            </a>
           )}
         </CardContent>
       </Card>
       {checkStatus === 2 && (
         <Card>
-          <CardContent extra>
-            <List>
-              <List.Item>
-                <Icon name="file" />
-                <List.Header>File details</List.Header>
-                <List.Content>
-                  <List.Description>File name: </List.Description>
-                  <List.Description>Owner: </List.Description>
-                  <List.Description>Transaction hash: </List.Description>
-                </List.Content>
-              </List.Item>
-            </List>
+          <CardContent>
+            <CardHeader>
+              <Icon name="file" />
+              Informations
+            </CardHeader>
+            <CardDescription>
+              <List>
+                <ListItem>
+                  <ListHeader>Code de vérification :</ListHeader>
+                  <Popup
+                    trigger={
+                      <Container>
+                        {truncateHash(fileHash)}
+                        <Icon
+                          name="copy outline"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => navigator.clipboard.writeText(fileHash)}
+                        />
+                      </Container>
+                    }
+                    content={fileHash}
+                  />
+                </ListItem>
+
+                <ListItem>
+                  <ListHeader>Transaction hash :</ListHeader>
+
+                  <Popup
+                    trigger={
+                      <Container>
+                        {truncateHash(fileData.transaction_hash)}
+                        <Icon
+                          name="copy outline"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => navigator.clipboard.writeText(fileData.transaction_hash)}
+                        />
+                      </Container>
+                    }
+                    content={fileData.transaction_hash}
+                  />
+                </ListItem>
+
+                {checkStatus === 2 ? (
+                  <ListItem>
+                    <a
+                      href={`https://etherscan.io/tx/${fileData.transaction_hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Icon name="ethereum" color="teal" />
+                      Vérifier sur Etherscan <Icon name="external alternate" size="small" />
+                    </a>
+                  </ListItem>
+                ) : (
+                  <ListItem>
+                    <Icon name="plus" color="blue" />
+                    Ajouter un nouveau fichier sur la blockchain !
+                  </ListItem>
+                )}
+              </List>
+            </CardDescription>
           </CardContent>
         </Card>
       )}
