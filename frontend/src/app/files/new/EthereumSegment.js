@@ -73,7 +73,7 @@ export default function EthereumSegment({ dispatch, state, fileInfo }) {
     };
 
     connect();
-  }, [fileInfo]);
+  }, [fileInfo, dispatch, transactionStatus]);
 
   return (
     <Segment disabled={!state}>

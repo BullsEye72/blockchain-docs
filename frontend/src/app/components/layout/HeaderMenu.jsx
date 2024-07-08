@@ -16,7 +16,7 @@ export default function HeaderMenu() {
   const session = useSession();
 
   return (
-    <Segment inverted textAlign="center" style={{ minHeight: 700, padding: "1em 0em" }} vertical>
+    <Segment inverted textAlign="center" style={{ minHeight: 400, padding: "1em 0em 3em 0em" }} vertical>
       <Menu fixed={fixed ? "top" : null} inverted={!fixed} pointing={!fixed} secondary={!fixed} size="large">
         <Container>
           <Menu.Item>

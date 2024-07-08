@@ -14,6 +14,7 @@ import {
   DimmerDimmable,
   Dimmer,
   Header,
+  Segment,
 } from "semantic-ui-react";
 import { useState, useRef } from "react";
 import { checkIfFileExistsOnDatabase } from "../../api/files/route";
@@ -97,7 +98,7 @@ export default function FileChecker() {
   console.log({ checkStatus });
 
   return (
-    <CardGroup centered>
+    <Card.Group centered>
       <Card
         ref={dropRef}
         onDrop={handleDrop}
@@ -108,13 +109,13 @@ export default function FileChecker() {
         <CardContent>
           <CardHeader>Vérifier si le fichier est connu</CardHeader>
           <CardMeta>
-            <span className="date">Déposez un fichier ici pour vérifier s'il est déjà connu</span>
+            <span className="date">{`Déposez un fichier ici pour vérifier s'il est déjà connu`}</span>
           </CardMeta>
 
           {checkStatus === 0 && (
             <CardDescription>
               <Icon name="clock outline" />
-              En attente d'un fichier...
+              {`En attente d'un fichier...`}
             </CardDescription>
           )}
           {checkStatus === 1 && (
@@ -203,6 +204,6 @@ export default function FileChecker() {
           </CardDescription>
         </CardContent>
       </DimmerDimmable>
-    </CardGroup>
+    </Card.Group>
   );
 }
