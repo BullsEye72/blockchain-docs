@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Button, Icon, Grid, GridRow, Container } from "semantic-ui-react";
 import FileChecker from "./FileChecker";
 
-import FileSaver from "@/app/files/new/FileSaver";
+import FileSaver from "@/app/(site)/files/new/FileSaver";
 
 export default function FileCardSelector() {
-  const [checkFileMode, setCheckFileMode] = useState(true);
+  const [checkFileMode, setCheckFileMode] = useState(false);
 
   const handleClick = (e) => {
     setCheckFileMode(!checkFileMode);

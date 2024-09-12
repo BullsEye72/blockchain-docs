@@ -1,6 +1,6 @@
 "use client";
 
-import { Grid, GridColumn, GridRow, Header, Container } from "semantic-ui-react";
+import { Header } from "semantic-ui-react";
 import { useEffect } from "react";
 
 export default function Page() {

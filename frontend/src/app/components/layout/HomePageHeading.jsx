@@ -9,7 +9,7 @@ import FileCardSelector from "../FileChecker/FileChoice";
  */
 export default function HomepageHeading({ mobile }) {
   return (
-    <Container text>
+    <Container>
       {" "}
       <Header
         as="h1"

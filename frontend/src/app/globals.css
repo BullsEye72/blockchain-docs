@@ -21,3 +21,8 @@
 .rotate-icon {
   transition: transform 0.5s ease 0s;
 }
+
+.interactive-text {
+  text-decoration: underline dotted #007bff;
+  cursor: pointer;
+}

@@ -45,11 +45,17 @@ export const authOptions = {
           throw new Error("Password must be at least 8 characters long");
         }
 
-        const response = await sql`SELECT * FROM users WHERE email=${credentials?.email}`;
-
         // Check if the user exists
+        const response = await sql`SELECT * FROM user_account WHERE email=${credentials?.email}`;
         if (response.rowCount === 0) {
           throw new Error("E-Mail not found");
+        }
+
+        // Check if the user "created" is true (user created by stripe event, has to register)
+        const responseCreated =
+          await sql`SELECT created FROM user_account WHERE email=${credentials?.email} AND created = true`;
+        if (responseCreated.rowCount === 0) {
+          throw new Error("E-Mail not available, you have to register first");
         }
 
         const user = response.rows[0];
@@ -72,10 +78,17 @@ export const authOptions = {
   callbacks: {
     async session({ session, token, user }) {
       // Send properties to the client, like an access_token and user id from a provider.
-      session.user.id = token.sub;
-      // console.log("Session:", session);
+      session.user.id = token.id;
+      session.user.email = token.email;
 
       return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
+      return token;
     },
   },
 };

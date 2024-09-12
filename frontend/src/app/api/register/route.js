@@ -15,12 +15,12 @@ export async function POST(request) {
 
     const hashedPassword = await hash(password, 10);
 
-    const response = await sql`
-            INSERT INTO users (email, password)
-            VALUES (${email}, ${hashedPassword})
+    const account_response = await sql`
+            INSERT INTO user_account (email, password, created)
+            VALUES (${email}, ${hashedPassword}, true)            
         `;
   } catch (error) {
-    return NextResponse.json({ error: "Internal error on register" }, { status: 500 });
+    return NextResponse.json({ error: "Internal error on register: " + error.message }, { status: 500 });
   }
 
   return NextResponse.json({ message: "User registered successfully" });
@@ -41,7 +41,7 @@ async function checkCredentials(email, password, confirmPassword, agreeToTerms) 
   }
 
   // Check if the user exists
-  const response = await sql`SELECT * FROM users WHERE email=${email}`;
+  const response = await sql`SELECT * FROM user_account WHERE email=${email}`;
   if (response.rowCount > 0) {
     throw new Error("E-Mail already used !");
   }

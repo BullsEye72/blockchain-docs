@@ -1,6 +1,6 @@
 "use server";
 import { ethers, InfuraProvider } from "ethers";
-import FileStorageContract from "../../../contracts/FileStorage";
+import FileStorageContract from "@/contracts/FileStorage";
 import { getServerSession } from "next-auth";
 import { sql } from "@vercel/postgres";
 import { storeFile } from "@/app/actions";
@@ -13,17 +13,10 @@ const factoryContract = new ethers.Contract(
   provider
 );
 
-export async function handleSubmit(formData) {
-  // handle form submission on the server
-  const result = { success: true, message: "File uploaded successfully" };
-
-  return result;
-}
-
 async function getUserId() {
   //TODO: ADD VALIDATION AND ERROR HANDLING
   const session = await getServerSession();
-  const response = await sql`SELECT id FROM users WHERE email = ${session.user.email}`;
+  const response = await sql`SELECT id FROM user_account WHERE email = ${session.user.email}`;
   const userId = response.rows[0].id;
   return userId;
 }
@@ -57,6 +50,12 @@ export async function checkManagerRights(user) {
 export async function sendToEthereum(fileInfo) {
   // const session = await getServerSession(authOptions);
   // console.log({ session });
+
+  //TESTING : Wait 5 seconds here
+  const test = await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  return { success: false, message: "Testing in progress" };
+
   const startTime = Date.now();
 
   // Connect to the contract

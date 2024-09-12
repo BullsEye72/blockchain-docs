@@ -3,10 +3,23 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button, Header, Segment } from "semantic-ui-react";
+import UserForm from "./UserForm";
+import { useEffect, useState } from "react";
 
-function AuthButton({ fixed }) {
+export default function AccountMenu() {
   const router = useRouter();
   const { data: session } = useSession();
+  const [type, setType] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const handleAccountClick = (type) => {
+    setType(type);
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    console.log({ open });
+  }, [open]);
 
   if (session) {
     return (
@@ -16,7 +29,7 @@ function AuthButton({ fixed }) {
           <br /> {session.user?.email}
         </p>
 
-        <Button as="a" inverted={!fixed} onClick={() => signOut()}>
+        <Button as="a" onClick={() => signOut()}>
           Sign out
         </Button>
       </>
@@ -25,26 +38,13 @@ function AuthButton({ fixed }) {
 
   return (
     <>
-      <Button as="a" inverted={!fixed} onClick={() => signIn()}>
+      <Button as="a" onClick={() => handleAccountClick("login")}>
         Log in
       </Button>
-      <Button
-        as="a"
-        inverted={!fixed}
-        primary={fixed}
-        style={{ marginLeft: "0.5em" }}
-        onClick={() => router.push("/register")}
-      >
+      <Button as="a" style={{ marginLeft: "0.5em" }} onClick={() => handleAccountClick("register")}>
         Sign Up
       </Button>
-    </>
-  );
-}
-
-export default function NavMenu() {
-  return (
-    <>
-      <AuthButton />
+      <UserForm type={type} setOpen={setOpen} open={open} />
     </>
   );
 }

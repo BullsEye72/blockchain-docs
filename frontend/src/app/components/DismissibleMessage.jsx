@@ -17,8 +17,11 @@ export default function DismissibleMessage({ type, message, title }) {
       newStatus = "positive";
     } else if (type === "error") {
       newStatus = "negative";
-    } else {
+    } else if (type === "error") {
       newStatus = "info";
+    } else {
+      setVisibleState(false);
+      return;
     }
 
     setMessageType(newStatus);

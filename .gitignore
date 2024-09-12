@@ -22,3 +22,6 @@ ignition/
 # Documentation DEV
 docs/dev
 .vercel
+
+# Temporary things
+/tmp

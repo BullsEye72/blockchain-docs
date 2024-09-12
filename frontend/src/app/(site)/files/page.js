@@ -9,8 +9,8 @@ import {
   Icon,
   Segment,
 } from "semantic-ui-react";
-import { getFiles } from "../actions";
-import FileCard from "../components/FileCard";
+import { getFiles } from "../../actions";
+import FileCard from "../../components/FileCard";
 import { getServerSession } from "next-auth";
 import { checkIfFileExistsOnBlockchain } from "./actions";
 

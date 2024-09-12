@@ -1,13 +1,13 @@
 import { Roboto } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 import "semantic-ui-css/semantic.min.css";
-import { Container, Divider, Segment, Header, Button } from "semantic-ui-react";
 
 import { getServerSession } from "next-auth";
-import SessionProvider from "./components/SessionProvider";
+import SessionProvider from "../components/SessionProvider";
 
-import HeaderMenu from "./components/layout/HeaderMenu";
-import Footer from "./components/layout/Footer";
+import HeaderMenu from "../components/layout/HeaderMenu";
+import Footer from "../components/layout/Footer";
+import UserForm from "../components/UserForm";
 
 const inter = Roboto({ weight: "400", subsets: ["latin"] });
 
@@ -18,6 +18,7 @@ export const metadata = {
 
 export default async function RootLayout({ children }) {
   const session = await getServerSession();
+
   return (
     <html lang="fr">
       <body className={inter.className}>

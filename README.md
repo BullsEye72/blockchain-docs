@@ -30,3 +30,6 @@ Ethereum was chosen for this project due to its decentralized and immutable natu
 ## Safety of SHA-256 Checksum
 
 SHA-256 is a cryptographic hash function that produces a unique output (or 'digest') for every unique input. It's like a digital fingerprint for your file. Even a small change in the file will produce a completely different checksum. This makes it extremely unlikely for two different files to have the same SHA-256 checksum, ensuring the reliability of the file verification process. Furthermore, it's a one-way function, meaning that it's practically impossible to recreate the original file from the checksum. This ensures the privacy of your file, as the checksum doesn't reveal any information about the file's content.
+
+# COMMANDS
+Launch stripe local CLI : `stripe listen --forward-to localhost:4242/webhook`

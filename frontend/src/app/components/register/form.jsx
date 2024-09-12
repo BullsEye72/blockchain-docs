@@ -1,13 +1,25 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import React, { useState } from "react";
-import { FormField, Button, Checkbox, Form, Card, CardContent, Message, CardHeader } from "semantic-ui-react";
+import React, { useRef, useState } from "react";
+import {
+  FormField,
+  Button,
+  Checkbox,
+  Form,
+  Card,
+  CardContent,
+  Message,
+  CardHeader,
+  ModalContent,
+  ModalActions,
+} from "semantic-ui-react";
 
-export default function RegisterForm() {
+export default function RegisterForm({ setOpen }) {
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const formRef = useRef(null);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -45,10 +57,9 @@ export default function RegisterForm() {
   };
 
   return (
-    <Card>
-      <CardContent>
-        <CardHeader>Créer un compte</CardHeader>
-        <Form onSubmit={handleSubmit}>
+    <>
+      <ModalContent>
+        <Form ref={formRef} onSubmit={handleSubmit}>
           <Message negative hidden={!errorMessage}>
             {errorMessage}
           </Message>
@@ -71,11 +82,21 @@ export default function RegisterForm() {
               onChange={(e, { checked }) => setAgreeToTerms(checked)}
             />
           </FormField>
-          <Button type="submit" disabled={isSubmitting}>
-            Register
-          </Button>
         </Form>
-      </CardContent>
-    </Card>
+      </ModalContent>
+      <ModalActions>
+        <Button color="black" onClick={() => setOpen(false)}>
+          Annuler
+        </Button>
+        <Button
+          color="blue"
+          onClick={() =>
+            formRef.current && formRef.current.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }))
+          }
+        >
+          Register
+        </Button>
+      </ModalActions>
+    </>
   );
 }

@@ -14,9 +14,9 @@ export async function getFiles() {
 
   try {
     const { rows } = await sql`
-    select file.name, users.email, file.hash, file.transaction_hash, file.lastmodified as "lastModified" from file
-    left join users on users.id = file.id_user
-    where users.email = ${session.user.email}
+    select file.name, user_account.email, file.hash, file.transaction_hash, file.lastmodified as "lastModified" from file
+    left join user_account on user_account.user_account_id = file.id_user
+    where user_account.email = ${session.user.email}
     `;
 
     return NextResponse.json(rows);

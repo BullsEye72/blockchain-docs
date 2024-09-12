@@ -1,7 +1,9 @@
 "use server";
 
 import { ethers, InfuraProvider, TransactionReceipt } from "ethers";
-import FileStorageContract from "../../contracts/FileStorage";
+import FileStorageContract from "@/contracts/FileStorage";
+import { sql } from "@vercel/postgres";
+import { getServerSession } from "next-auth";
 
 const provider = new InfuraProvider("sepolia", process.env.INFURA_API_KEY);
 // const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
@@ -38,4 +40,35 @@ export async function checkIfFileExistsOnBlockchain(fileHash, transactionAddress
   }
 
   return { fileOwnerId, transactionTimestamp };
+}
+
+export async function checkCreditForFileUpload() {
+  const userCredit = await getUserCredit();
+
+  if (userCredit === -1) {
+    return { success: true, hasCredit: false, message: "User not found" };
+  } else if (userCredit === 0) {
+    return { success: true, hasCredit: false, message: "Insufficient credit" };
+  } else if (userCredit > 0) {
+    console.log("User credit: ", userCredit);
+    return { success: true, hasCredit: true, message: "Sufficient credit" };
+  } else {
+    return { success: false, message: "Error" };
+  }
+}
+
+async function getUserCredit() {
+  const session = await getServerSession();
+  if (session) {
+    const response = await sql`SELECT credit FROM user_account WHERE email = ${session.user.email}`;
+    console.log("row count: ", response.rowCount);
+    if (response.rowCount === 1) {
+      return response.rows[0].credit;
+    } else {
+      console.error("❌ Session exists but user not found or too many users found!");
+      return -1;
+    }
+  } else {
+    return 0;
+  }
 }
