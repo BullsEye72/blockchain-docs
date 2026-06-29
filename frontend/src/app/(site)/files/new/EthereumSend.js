@@ -62,10 +62,8 @@ export async function checkManagerRights() {
   return { success: true, message: "Manager rights granted" };
 }
 
-export async function sendToEthereum(fileInfo) {
-  const startTime = Date.now();
-
-  // Check if already registered on-chain (pre-saved rows have null transaction_hash — skip those)
+// Step 1: sign and broadcast the transaction — returns txHash immediately
+export async function broadcastToEthereum(fileInfo) {
   const knownHashes = await getFileHashes();
   for (let file of knownHashes) {
     if (file.hash === fileInfo.hash && file.transaction_hash) {
@@ -76,8 +74,6 @@ export async function sendToEthereum(fileInfo) {
   const session = await getServerSession(authOptions);
   let userEmail = session?.user?.email ?? null;
 
-  // For anonymous users who just paid via Stripe, the webhook may have already
-  // linked the file to an account — look it up from the DB if session is empty
   if (!userEmail) {
     const linked = await sql`
       SELECT ua.email FROM file f
@@ -96,14 +92,34 @@ export async function sendToEthereum(fileInfo) {
     const contractWithSigner = factoryContract.connect(signer);
 
     const tx = await contractWithSigner.storeFile(fileInfo.hash, 1);
-    const receipt = await provider.waitForTransaction(tx.hash);
-    const gasUsed = ethers.formatEther(receipt.gasUsed);
-    console.log("Transaction cost:", gasUsed, "ETH");
+    return { success: true, txHash: tx.hash, attemptId };
+  } catch (error) {
+    console.error("Broadcast failed:", error.message);
+    await updateAttempt(attemptId, "failed", { errorMessage: error.message });
+    return { success: false, message: error.message };
+  }
+}
 
-    await updateAttempt(attemptId, "success", { transactionHash: tx.hash });
+// Step 2: lightweight receipt check — called by the client every few seconds
+export async function checkReceipt(txHash) {
+  try {
+    const { provider } = getContract();
+    const receipt = await provider.getTransactionReceipt(txHash);
+    if (!receipt) return { status: "pending" };
+    if (receipt.status !== 1) return { status: "failed", message: "Transaction revertée par le contrat" };
+    return { status: "confirmed" };
+  } catch (error) {
+    return { status: "error", message: error.message };
+  }
+}
+
+// Step 3: called once after client confirms receipt — updates DB
+export async function finalizeTransaction(txHash, fileHash, attemptId) {
+  try {
+    await updateAttempt(attemptId, "success", { transactionHash: txHash });
 
     try {
-      await updateFile({ transaction_hash: tx.hash, hash: fileInfo.hash });
+      await updateFile({ transaction_hash: txHash, hash: fileHash });
     } catch (dbError) {
       console.error("DB update failed:", dbError.message);
     }
@@ -114,10 +130,9 @@ export async function sendToEthereum(fileInfo) {
       // Anonymous user — no credit to decrement
     }
 
-    const elapsedTime = Date.now() - startTime;
-    return { success: true, message: "File uploaded successfully", elapsedTime, contractAddress: tx.hash };
+    return { success: true };
   } catch (error) {
-    console.error("Blockchain send failed:", error.message);
+    console.error("Finalize failed:", error.message);
     await updateAttempt(attemptId, "failed", { errorMessage: error.message });
     return { success: false, message: error.message };
   }

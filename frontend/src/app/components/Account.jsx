@@ -1,36 +1,23 @@
 "use client";
 
-import { signIn, signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { Button, Header, Segment } from "semantic-ui-react";
+import { signOut, useSession } from "next-auth/react";
+import { Button } from "semantic-ui-react";
 import UserForm from "./UserForm";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function AccountMenu() {
-  const router = useRouter();
   const { data: session } = useSession();
-  const [type, setType] = useState("");
   const [open, setOpen] = useState(false);
-
-  const handleAccountClick = (type) => {
-    setType(type);
-    setOpen(true);
-  };
-
-  useEffect(() => {
-    console.log({ open });
-  }, [open]);
 
   if (session) {
     return (
       <>
         <p>
-          Logged in as:
+          Connecté en tant que :
           <br /> {session.user?.email}
         </p>
-
         <Button as="a" onClick={() => signOut()}>
-          Sign out
+          Se déconnecter
         </Button>
       </>
     );
@@ -38,13 +25,10 @@ export default function AccountMenu() {
 
   return (
     <>
-      <Button as="a" onClick={() => handleAccountClick("login")}>
-        Log in
+      <Button as="a" onClick={() => setOpen(true)}>
+        Se connecter
       </Button>
-      <Button as="a" style={{ marginLeft: "0.5em" }} onClick={() => handleAccountClick("register")}>
-        Sign Up
-      </Button>
-      <UserForm type={type} setOpen={setOpen} open={open} />
+      <UserForm setOpen={setOpen} open={open} />
     </>
   );
 }

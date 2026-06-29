@@ -1,74 +1,75 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { FormField, Button, Form, Message, ModalContent, ModalActions } from "semantic-ui-react";
+import { Button, Form, FormField, Message, ModalContent, ModalActions, Divider } from "semantic-ui-react";
 
 export default function LoginForm({ setOpen }) {
-  const router = useRouter();
   const formRef = useRef(null);
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [errorMessage, setErrorMessage] = useState("");
+  const handleMagicLink = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setErrorMessage("");
-
-    const formData = new FormData(event.currentTarget);
-
-    const response = await signIn("credentials", {
-      email: formData.get("email"),
-      password: formData.get("password"),
-      redirect: false,
+    const res = await fetch("/api/magic-link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
     });
 
-    console.log({ response });
-
-    if (response && !response.error) {
-      setOpen(false);
-      router.push("/");
-      router.refresh();
+    setLoading(false);
+    if (res.ok) {
+      setSent(true);
     } else {
-      setErrorMessage(response.error || "An unknown error occurred");
-    }
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      formRef.current.requestSubmit();
+      setError("Une erreur est survenue. Réessayez.");
     }
   };
 
   return (
     <>
       <ModalContent>
-        <Form ref={formRef} onSubmit={handleSubmit}>
-          <Message negative hidden={!errorMessage}>
-            {errorMessage}
+        <Button
+          fluid
+          color="google plus"
+          icon="google"
+          content="Continuer avec Google"
+          onClick={() => signIn("google", { callbackUrl: "/" })}
+        />
+
+        <Divider horizontal>ou</Divider>
+
+        {sent ? (
+          <Message positive>
+            <Message.Header>Lien envoyé !</Message.Header>
+            <p>Vérifiez votre boîte mail et cliquez sur le lien pour vous connecter.</p>
           </Message>
-          <FormField>
-            <label>E-Mail</label>
-            <input placeholder="address e-mail" type="text" name="email" onKeyDown={handleKeyDown} />
-          </FormField>
-          <FormField>
-            <label>Mot de passe</label>
-            <input type="password" placeholder="" name="password" onKeyDown={handleKeyDown} />
-          </FormField>
-        </Form>
+        ) : (
+          <Form ref={formRef} onSubmit={handleMagicLink}>
+            <Message negative hidden={!error}>{error}</Message>
+            <FormField>
+              <label>Adresse e-mail</label>
+              <input
+                type="email"
+                placeholder="votre@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </FormField>
+            <Button fluid color="blue" loading={loading} disabled={loading}>
+              Recevoir un lien de connexion
+            </Button>
+          </Form>
+        )}
       </ModalContent>
       <ModalActions>
         <Button color="black" onClick={() => setOpen(false)}>
-          Annuler
-        </Button>
-        <Button
-          color="blue"
-          onClick={() =>
-            formRef.current && formRef.current.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }))
-          }
-        >
-          Login
+          Fermer
         </Button>
       </ModalActions>
     </>
