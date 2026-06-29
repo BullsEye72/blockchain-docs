@@ -26,6 +26,9 @@
     "stripe": "^16.1.0",
     "zod": "^3.23.8"
   },
+  "engines": {
+    "node": ">=24.x"
+  },
   "devDependencies": {
     "@types/react": "18.3.3",
     "eslint": "^8",
