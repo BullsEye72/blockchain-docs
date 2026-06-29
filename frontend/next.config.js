@@ -5,7 +5,7 @@ module.exports = {
     domains: ["dummyimage.com", "localhost"],
   },
   experimental: {
-serverActions: {
+    serverActions: {
       bodySizeLimit: "500mb",
     },
   },
