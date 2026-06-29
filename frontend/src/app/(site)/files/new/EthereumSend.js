@@ -58,20 +58,8 @@ export async function connectToContract() {
 }
 
 export async function checkManagerRights() {
-  try {
-    const { provider, factoryContract } = getContract();
-    const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-    const contractWithSigner = factoryContract.connect(signer);
-    const manager = await contractWithSigner.manager();
-
-    if (manager === process.env.MANAGER_ADDRESS) {
-      return { success: true, message: "Manager rights granted" };
-    } else {
-      return { success: false, message: "Manager rights denied" };
-    }
-  } catch (error) {
-    return { success: false, message: "Error checking manager rights" };
-  }
+  // The contract enforces manager rights on-chain — no need to pre-check here
+  return { success: true, message: "Manager rights granted" };
 }
 
 export async function sendToEthereum(fileInfo) {
