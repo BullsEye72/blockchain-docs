@@ -3,6 +3,7 @@ import "../globals.css";
 import "semantic-ui-css/semantic.min.css";
 
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import SessionProvider from "../components/SessionProvider";
 
 import HeaderMenu from "../components/layout/HeaderMenu";
@@ -17,7 +18,7 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
 
   return (
     <html lang="fr">

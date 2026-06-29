@@ -4,6 +4,7 @@ import { ethers, InfuraProvider, TransactionReceipt } from "ethers";
 import FileStorageContract from "@/contracts/FileStorage";
 import { sql } from "@vercel/postgres";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const provider = new InfuraProvider("sepolia", process.env.INFURA_API_KEY);
 // const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
@@ -16,30 +17,27 @@ const storageContract = new ethers.Contract(
 
 // const contractWithSigner = storageContract.connect(signer);
 
-async function getTransactionTimestamp(transactionAddress) {
-  const transactionReceipt = await provider.getTransaction(transactionAddress);
-
-  if (!transactionReceipt) {
-    console.error("Transaction receipt not found");
-    return;
-  }
-
-  const blockNumber = transactionReceipt.blockNumber;
-  const block = await provider.getBlock(blockNumber);
-  const timestamp = block.timestamp;
-  return timestamp * 1000;
-}
-
 export async function checkIfFileExistsOnBlockchain(fileHash, transactionAddress) {
-  const fileOwnerId = await storageContract.files(fileHash);
-
-  let transactionTimestamp = null;
-  if (transactionAddress.length === 66) {
-    // Length of a transaction address = 66
-    transactionTimestamp = await getTransactionTimestamp(transactionAddress);
+  // Verify via transaction receipt — works regardless of the userId stored in the contract
+  if (transactionAddress && transactionAddress.length === 66) {
+    try {
+      const receipt = await provider.getTransactionReceipt(transactionAddress);
+      if (!receipt || receipt.status !== 1) {
+        return { fileOwnerId: 0, transactionTimestamp: null };
+      }
+      const block = await provider.getBlock(receipt.blockNumber);
+      return { fileOwnerId: 1, transactionTimestamp: block.timestamp * 1000 };
+    } catch {
+      return { fileOwnerId: 0, transactionTimestamp: null };
+    }
   }
 
-  return { fileOwnerId, transactionTimestamp };
+  // No transaction hash — query FileAdded events and search by hash
+  // (fileHash is not indexed in the event, so we fetch all and filter)
+  const events = await storageContract.queryFilter(storageContract.filters.FileAdded());
+  const match = events.find((e) => e.args[0] === fileHash);
+  if (!match) return { fileOwnerId: 0, transactionTimestamp: null };
+  return { fileOwnerId: 1, transactionTimestamp: Number(match.args[2]) * 1000 };
 }
 
 export async function checkCreditForFileUpload() {
@@ -58,17 +56,28 @@ export async function checkCreditForFileUpload() {
 }
 
 async function getUserCredit() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (session) {
     const response = await sql`SELECT credit FROM user_account WHERE email = ${session.user.email}`;
-    console.log("row count: ", response.rowCount);
     if (response.rowCount === 1) {
       return response.rows[0].credit;
     } else {
-      console.error("❌ Session exists but user not found or too many users found!");
       return -1;
     }
   } else {
     return 0;
   }
+}
+
+export async function getCreditCount() {
+  const session = await getServerSession(authOptions);
+  if (!session) return null;
+  const credit = await getUserCredit();
+  return credit >= 0 ? credit : 0;
+}
+
+export async function decrementCredit() {
+  const session = await getServerSession(authOptions);
+  if (!session) throw new Error("Not logged in");
+  await sql`UPDATE user_account SET credit = credit - 1 WHERE email = ${session.user.email} AND credit > 0`;
 }

@@ -1,0 +1,7 @@
+ignoredBuiltDependencies:
+  - bufferutil
+  - unrs-resolver
+  - utf-8-validate
+
+onlyBuiltDependencies:
+  - bcrypt

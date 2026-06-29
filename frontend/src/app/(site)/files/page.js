@@ -12,6 +12,7 @@ import {
 import { getFiles } from "../../actions";
 import FileCard from "../../components/FileCard";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { checkIfFileExistsOnBlockchain } from "./actions";
 
 // function waitForEvent() {
@@ -39,7 +40,7 @@ async function getData() {
 }
 
 async function FilesPage() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
 
   const filesData = await getData();
 

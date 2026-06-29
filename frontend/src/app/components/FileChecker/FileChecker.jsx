@@ -18,8 +18,7 @@ import {
 } from "semantic-ui-react";
 import { useState, useRef } from "react";
 import { checkIfFileExistsOnDatabase } from "../../api/files/route";
-
-const crypto = require("crypto");
+import { checkIfFileExistsOnBlockchain } from "@/app/(site)/files/actions";
 
 export default function FileChecker() {
   const [checkStatus, setCheckStatus] = useState(0); // 0 = idle, 1 = checking, 2 = file found, 3 = file not found, -1 = error
@@ -54,40 +53,40 @@ export default function FileChecker() {
     // Get the files from the event
     const selectedFile = event.target.files?.[0] || event.dataTransfer.files[0];
 
-    // Calculate the hash of the file
-    const fileReader = new FileReader();
-    fileReader.onload = async () => {
-      setCheckStatus(1); // checking
-      const arrayBuffer = fileReader.result;
-      const buffer = Buffer.from(new Uint8Array(arrayBuffer));
-      const hash = crypto.createHash("sha256");
-      hash.update(buffer);
-      const checksum = hash.digest("hex");
-      setFileHash(checksum);
-      // console.log("Checksum:", checksum);
+    setCheckStatus(1); // checking
 
-      // Check if the file exists
-      //const data = await getData();
+    const arrayBuffer = await selectedFile.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const checksum = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    setFileHash(checksum);
 
-      const fileExistsInDatabase = await checkIfFileExistsOnDatabase(checksum);
-      // console.log({ fileExistsInDatabase });
+    const fileExistsInDatabase = await checkIfFileExistsOnDatabase(checksum);
 
-      if (fileExistsInDatabase) {
-        setCheckStatus(2); // file found
-        setFileData({
-          transaction_hash: fileExistsInDatabase.transaction_hash,
-          lastmodified: fileExistsInDatabase.lastmodified,
-        });
-      } else {
-        setCheckStatus(3); // file not found
-        setFileData(null);
-        setFileHash("No Hash");
-      }
-    };
+    if (fileExistsInDatabase) {
+      setCheckStatus(2);
+      setFileData({
+        transaction_hash: fileExistsInDatabase.transaction_hash,
+        lastmodified: fileExistsInDatabase.lastmodified,
+        source: "db",
+      });
+      return;
+    }
 
-    fileReader.readAsArrayBuffer(selectedFile);
-
-    return;
+    // Not in DB — check the blockchain directly
+    const { fileOwnerId, transactionTimestamp } = await checkIfFileExistsOnBlockchain(checksum, "");
+    if (Number(fileOwnerId) !== 0) {
+      setCheckStatus(2);
+      setFileData({
+        transaction_hash: null,
+        lastmodified: transactionTimestamp ? new Date(transactionTimestamp).toISOString() : null,
+        source: "blockchain",
+      });
+    } else {
+      setCheckStatus(3);
+      setFileData(null);
+      setFileHash("No Hash");
+    }
   };
 
   const truncateHash = (hash = "") => {
@@ -170,34 +169,44 @@ export default function FileChecker() {
                 />
               </ListItem>
 
-              <ListItem>
-                <ListHeader>Transaction hash :</ListHeader>
+              {fileData?.transaction_hash && (
+                <>
+                  <ListItem>
+                    <ListHeader>Transaction hash :</ListHeader>
+                    <Popup
+                      trigger={
+                        <Container>
+                          {truncateHash(fileData.transaction_hash)}
+                          <Icon
+                            name="copy outline"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => navigator.clipboard.writeText(fileData.transaction_hash)}
+                          />
+                        </Container>
+                      }
+                      content={fileData.transaction_hash}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <a
+                      href={`https://sepolia.etherscan.io/tx/${fileData.transaction_hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Icon name="ethereum" color="teal" />
+                      Vérifier sur Etherscan <Icon name="external alternate" size="small" />
+                    </a>
+                  </ListItem>
+                </>
+              )}
 
-                <Popup
-                  trigger={
-                    <Container>
-                      {truncateHash(fileData?.transaction_hash)}
-                      <Icon
-                        name="copy outline"
-                        style={{ cursor: "pointer" }}
-                        onClick={() => navigator.clipboard.writeText(fileData.transaction_hash)}
-                      />
-                    </Container>
-                  }
-                  content={fileData?.transaction_hash}
-                />
-              </ListItem>
-
-              {checkStatus === 2 && (
+              {fileData?.source === "blockchain" && (
                 <ListItem>
-                  <a
-                    href={`https://etherscan.io/tx/${fileData.transaction_hash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Icon name="ethereum" color="teal" />
-                    Vérifier sur Etherscan <Icon name="external alternate" size="small" />
-                  </a>
+                  <Icon name="ethereum" color="teal" />
+                  Trouvé directement sur la blockchain
+                  {fileData.lastmodified && (
+                    <> — {new Date(fileData.lastmodified).toLocaleDateString()}</>
+                  )}
                 </ListItem>
               )}
             </List>

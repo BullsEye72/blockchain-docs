@@ -1,10 +1,12 @@
 "use server";
 import { ethers, InfuraProvider } from "ethers";
-import FileStorageContract from "@/contracts/FileStorage";
-import { getServerSession } from "next-auth";
 import { sql } from "@vercel/postgres";
-import { storeFile } from "@/app/actions";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import FileStorageContract from "@/contracts/FileStorage";
 import { getFileHashes } from "@/app/api/files/route";
+import { updateFile } from "@/app/actions";
+import { decrementCredit } from "@/app/(site)/files/actions";
 
 const provider = new InfuraProvider("sepolia", process.env.INFURA_API_KEY);
 const factoryContract = new ethers.Contract(
@@ -13,18 +15,29 @@ const factoryContract = new ethers.Contract(
   provider
 );
 
-async function getUserId() {
-  //TODO: ADD VALIDATION AND ERROR HANDLING
-  const session = await getServerSession();
-  const response = await sql`SELECT id FROM user_account WHERE email = ${session.user.email}`;
-  const userId = response.rows[0].id;
-  return userId;
+async function logAttempt(fileHash, fileName, userEmail) {
+  const result = await sql`
+    INSERT INTO blockchain_attempt (file_hash, file_name, user_email, status)
+    VALUES (${fileHash}, ${fileName}, ${userEmail ?? null}, 'pending')
+    RETURNING id
+  `;
+  return result.rows[0].id;
+}
+
+async function updateAttempt(id, status, { transactionHash = null, errorMessage = null } = {}) {
+  await sql`
+    UPDATE blockchain_attempt
+    SET status = ${status},
+        transaction_hash = ${transactionHash},
+        error_message = ${errorMessage},
+        updated_at = NOW()
+    WHERE id = ${id}
+  `;
 }
 
 export async function connectToContract() {
   try {
     const defaultFile = await factoryContract.files("");
-
     if (Number(defaultFile) === 0) {
       return { success: true, message: "Connected to contract successfully" };
     } else {
@@ -35,72 +48,78 @@ export async function connectToContract() {
   }
 }
 
-export async function checkManagerRights(user) {
-  const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-  const contractWithSigner = factoryContract.connect(signer);
-  const manager = await contractWithSigner.manager();
+export async function checkManagerRights() {
+  try {
+    const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+    const contractWithSigner = factoryContract.connect(signer);
+    const manager = await contractWithSigner.manager();
 
-  if (manager === process.env.MANAGER_ADDRESS) {
-    return { success: true, message: "Manager rights granted" };
-  } else {
-    return { success: false, message: "Manager rights denied" };
+    if (manager === process.env.MANAGER_ADDRESS) {
+      return { success: true, message: "Manager rights granted" };
+    } else {
+      return { success: false, message: "Manager rights denied" };
+    }
+  } catch (error) {
+    return { success: false, message: "Error checking manager rights" };
   }
 }
 
 export async function sendToEthereum(fileInfo) {
-  // const session = await getServerSession(authOptions);
-  // console.log({ session });
-
-  //TESTING : Wait 5 seconds here
-  const test = await new Promise((resolve) => setTimeout(resolve, 5000));
-
-  return { success: false, message: "Testing in progress" };
-
   const startTime = Date.now();
 
-  // Connect to the contract
-  const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-  const contractWithSigner = factoryContract.connect(signer);
-
-  // Check if the file hash is already knowns in the database
+  // Check if already registered on-chain (pre-saved rows have null transaction_hash — skip those)
   const knownHashes = await getFileHashes();
-
   for (let file of knownHashes) {
-    if (file.hash === fileInfo.hash) {
-      console.log("File already exists:", file.transaction_hash);
-      //console.log({ file });
+    if (file.hash === fileInfo.hash && file.transaction_hash) {
       return { success: false, message: "File already exists", existingAddress: file.transaction_hash };
     }
   }
 
-  const userId = await getUserId();
-  //Store the new file data in the database
-  const storeResult = await storeFile({
-    userId: userId,
-    hash: fileInfo.hash,
-    txHash: "", //Empty for now, will be updated after the transaction is mined
-    name: fileInfo.name,
-  });
+  const session = await getServerSession(authOptions);
+  let userEmail = session?.user?.email ?? null;
 
-  if (storeResult.status !== 200) {
-    console.log({ storeResult });
-    return { success: false, message: "Database error" };
+  // For anonymous users who just paid via Stripe, the webhook may have already
+  // linked the file to an account — look it up from the DB if session is empty
+  if (!userEmail) {
+    const linked = await sql`
+      SELECT ua.email FROM file f
+      JOIN user_account ua ON ua.user_account_id = f.id_user
+      WHERE f.hash = ${fileInfo.hash}
+      LIMIT 1
+    `;
+    if (linked.rowCount > 0) userEmail = linked.rows[0].email;
   }
 
-  // Send the file hash to the contract
-  const result = await contractWithSigner.storeFile(fileInfo.hash, userId);
-  // console.log("Transaction: ", result);
+  const attemptId = await logAttempt(fileInfo.hash, fileInfo.name, userEmail);
 
-  // Wait for the transaction to be mined
-  const receipt = await provider.waitForTransaction(result.hash);
-  const gasUsed = ethers.formatEther(receipt.gasUsed);
-  console.log("Transaction cost: ", gasUsed, "ETH");
+  try {
+    const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+    const contractWithSigner = factoryContract.connect(signer);
 
-  // Get the address of the new file
-  const newContractAddress = result.hash;
+    const tx = await contractWithSigner.storeFile(fileInfo.hash, 1);
+    const receipt = await provider.waitForTransaction(tx.hash);
+    const gasUsed = ethers.formatEther(receipt.gasUsed);
+    console.log("Transaction cost:", gasUsed, "ETH");
 
-  const endTime = Date.now();
-  const elapsedTime = endTime - startTime;
+    await updateAttempt(attemptId, "success", { transactionHash: tx.hash });
 
-  return { success: true, message: "File uploaded successfully", elapsedTime, contractAddress: newContractAddress };
+    try {
+      await updateFile({ transaction_hash: tx.hash, hash: fileInfo.hash });
+    } catch (dbError) {
+      console.error("DB update failed:", dbError.message);
+    }
+
+    try {
+      await decrementCredit();
+    } catch (_) {
+      // Anonymous user — no credit to decrement
+    }
+
+    const elapsedTime = Date.now() - startTime;
+    return { success: true, message: "File uploaded successfully", elapsedTime, contractAddress: tx.hash };
+  } catch (error) {
+    console.error("Blockchain send failed:", error.message);
+    await updateAttempt(attemptId, "failed", { errorMessage: error.message });
+    return { success: false, message: error.message };
+  }
 }

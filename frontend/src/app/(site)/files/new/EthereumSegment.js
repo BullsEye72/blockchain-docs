@@ -2,7 +2,7 @@ import { Header, Icon, Segment, List } from "semantic-ui-react";
 import { connectToContract, checkManagerRights, sendToEthereum } from "./EthereumSend";
 import { useCallback, useEffect, useState } from "react";
 
-export default function EthereumSegment({ dispatch, state, fileInfo }) {
+export default function EthereumSegment({ dispatch = () => {}, state, fileInfo }) {
   const [isConnected, setIsConnected] = useState(null);
   const [isManager, setIsManager] = useState(null);
   const [transactionStatus, setTransactionStatus] = useState(null);
@@ -47,7 +47,7 @@ export default function EthereumSegment({ dispatch, state, fileInfo }) {
     setTransactionStatus(0); // 0 = pending
 
     console.log("Sending file to Ethereum");
-    result = await sendToEthereum(fileInfo);
+    result = await sendToEthereum({ hash: fileInfo.hash, name: fileInfo.name });
     // console.log({ result });
 
     if (result.success) {

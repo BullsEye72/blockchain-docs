@@ -1,88 +1,62 @@
-import { hashFile } from "@/app/hash";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Button, List, ListItem, Segment, Header, Icon, Loader, Popup } from "semantic-ui-react";
-import { checkCreditForFileUpload } from "../actions";
+import { Button, List, ListItem, Segment, Header, Icon, Loader, Popup, Message } from "semantic-ui-react";
+import { checkIfFileExistsOnDatabase } from "@/app/api/files/route";
 
 const formatHash = (hash, size) => {
+  if (!hash) return "";
   if (size * 2 + 3 > hash.length) return hash;
   if (size < 3) return hash;
   return hash.slice(0, size) + "..." + hash.slice(-size);
 };
 
-export default function FileInfoSegment({ state, fileInfo, setFileInfo, setStripeState }) {
+const calculateHash = async (file) => {
+  const arrayBuffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+};
+
+export default function FileInfoSegment({ state, fileInfo, setFileInfo, onSubmit }) {
   const [isHashing, setIsHashing] = useState(false);
-  const [processMessage, setProcessMessage] = useState("Waiting for file upload...");
+  const [existingRecord, setExistingRecord] = useState(null); // null = unknown, false = not found, object = found
   const [isSubmitting, startSubmitting] = useTransition();
 
   function handleSubmit() {
-    startSubmitting(async () => {
-      const canSubmit = await checkCreditForFileUpload();
-      if (canSubmit.success) {
-        if (canSubmit.hasCredit) {
-          console.log("🚀 Ready to upload the file to the blockchain!");
-        } else {
-          console.log("❌ Not enough credit to submit the file to the blockchain!");
-          setStripeState(true);
-        }
-        setFileInfo({ ...fileInfo, status: "success", hasCredit: canSubmit.hasCredit });
-      } else {
-        console.log("❌ Error submitting the file to the blockchain!");
-        setFileInfo({ ...fileInfo, status: "error", message: canSubmit.message });
-      }
+    startSubmitting(() => {
+      onSubmit();
     });
   }
 
   useEffect(() => {
-    if (!fileInfo.file) return;
+    if (!fileInfo.file || fileInfo.hash) return;
 
-    const hashFile = async (file) => {
-      if (fileInfo.name === file.name && fileInfo.hash !== "") return;
-
-      // Read the file and calculate the hash
+    const process = async () => {
       setIsHashing(true);
+      setExistingRecord(null);
 
-      const { hash, processingTime } = await calculateHash(fileInfo.file);
-      console.log("🔐 Hash: ", hash);
-
+      const startTime = Date.now();
+      const hash = await calculateHash(fileInfo.file);
+      const processingTime = Date.now() - startTime;
       setFileInfo({ ...fileInfo, hash, processingTime });
+
+      const existing = await checkIfFileExistsOnDatabase(hash);
+      setExistingRecord(existing || false);
 
       setIsHashing(false);
     };
-    hashFile(fileInfo);
+
+    process();
   }, [fileInfo]);
 
-  /**
-   * Calculates the hash of a file.
-   *
-   * @param {File} file - The file to calculate the hash for.
-   * @returns {Promise<void>} - A promise that resolves when the hash calculation is complete.
-   */
-  const calculateHash = async function (file) {
-    setProcessMessage("🛠️ Starting the hashing!");
-    const startTime = Date.now();
-    const fileReader = new FileReader();
-    const fileArrayBuffer = await new Promise((resolve) => {
-      fileReader.onload = () => resolve(fileReader.result);
-      fileReader.readAsArrayBuffer(file);
-    });
-    const fileByteArray = new Uint8Array(fileArrayBuffer);
-    console.log("🛠️ byte array created, sending to server !");
-    const result = await hashFile(fileByteArray, file.name);
-
-    const endTime = Date.now();
-    const processingTime = endTime - startTime;
-    console.log("⌚ Processing time: ", processingTime, "ms");
-
-    return { hash: result.hash, processingTime };
-  };
-
   const fileDateAndTimeText = useMemo(() => {
-    if (fileInfo) {
+    if (fileInfo?.lastModified) {
       const date = new Date(fileInfo.lastModified);
       return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
     }
     return "";
   }, [fileInfo]);
+
+  const alreadyRegistered = existingRecord && existingRecord.transaction_hash;
 
   return (
     <Segment placeholder={!state}>
@@ -94,39 +68,48 @@ export default function FileInfoSegment({ state, fileInfo, setFileInfo, setStrip
           </Header>
           {isHashing ? (
             <Segment>
-              <Loader active inline />{" "}
-              <p>
-                Envoi et calcul du code de vérification en cours! <br />
-                Votre fichier ne sera pas conservé à la fin de ce processus.
-              </p>
+              <Loader active inline />
+              <p>Calcul et vérification en cours...</p>
             </Segment>
           ) : (
             <Segment textAlign="left">
               <List>
                 <ListItem icon="file text" content={fileInfo.name} />
                 <ListItem icon="calendar" content={fileDateAndTimeText} />
-
                 <Popup
                   flowing
-                  position={"top center"}
+                  position="top center"
                   trigger={
                     <ListItem
                       icon="hashtag"
                       style={{ wordWrap: "anywhere" }}
-                      content={<span className="interactive-text">${formatHash(fileInfo.hash, 10)}</span>}
+                      content={<span className="interactive-text">{formatHash(fileInfo.hash, 10)}</span>}
                     />
                   }
                 >
                   <Header as="h4">Code de vérification</Header>
                   <p>{fileInfo.hash}</p>
                 </Popup>
-
                 <ListItem icon="time" content={`Calculé en ${fileInfo.processingTime}ms`} />
               </List>
 
-              <Button onClick={handleSubmit} primary>
-                Sauvegarder sur la blockchain !
-              </Button>
+              {alreadyRegistered ? (
+                <Message positive>
+                  <Icon name="check circle" />
+                  Ce fichier est déjà enregistré sur la blockchain.{" "}
+                  <a
+                    href={`https://sepolia.etherscan.io/tx/${existingRecord.transaction_hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Voir sur Etherscan
+                  </a>
+                </Message>
+              ) : (
+                <Button onClick={handleSubmit} primary loading={isSubmitting} disabled={!fileInfo.hash || isSubmitting}>
+                  Sauvegarder sur la blockchain !
+                </Button>
+              )}
             </Segment>
           )}
         </>
