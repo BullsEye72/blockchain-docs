@@ -109,6 +109,7 @@ export default function FileSaver() {
             <EthereumSegment
               state={uploadStatus === 2}
               fileInfo={fileInfo}
+              userEmail={session?.user?.email ?? null}
               onSuccess={handleBlockchainSuccess}
             />
           </GridColumn>

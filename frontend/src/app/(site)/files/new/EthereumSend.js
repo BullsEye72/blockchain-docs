@@ -11,6 +11,8 @@ import { decrementCredit } from "@/app/(site)/files/actions";
 let _provider = null;
 let _factoryContract = null;
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function getContract() {
   if (!_factoryContract) {
     _provider = new InfuraProvider("sepolia", process.env.INFURA_API_KEY);
@@ -44,14 +46,13 @@ async function updateAttempt(id, status, { transactionHash = null, errorMessage 
 }
 
 export async function connectToContract() {
+  // No RPC call — just verify config and initialize the provider locally
   try {
-    const { factoryContract } = getContract();
-    const defaultFile = await factoryContract.files("");
-    if (Number(defaultFile) === 0) {
-      return { success: true, message: "Connected to contract successfully" };
-    } else {
-      return { success: false, message: "Failed to connect to contract" };
+    if (!process.env.FILES_STORAGE_CONTRACT_ADDRESS) {
+      return { success: false, message: "Contract address not configured" };
     }
+    getContract();
+    return { success: true };
   } catch (error) {
     return { success: false, message: "Error while trying to connect to contract" };
   }
@@ -86,18 +87,37 @@ export async function broadcastToEthereum(fileInfo) {
 
   const attemptId = await logAttempt(fileInfo.hash, fileInfo.name, userEmail);
 
-  try {
-    const { provider, factoryContract } = getContract();
-    const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-    const contractWithSigner = factoryContract.connect(signer);
+  const { provider, factoryContract } = getContract();
+  const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+  const contractWithSigner = factoryContract.connect(signer);
 
-    const tx = await contractWithSigner.storeFile(fileInfo.hash, 1);
-    return { success: true, txHash: tx.hash, attemptId };
-  } catch (error) {
-    console.error("Broadcast failed:", error.message);
-    await updateAttempt(attemptId, "failed", { errorMessage: error.message });
-    return { success: false, message: error.message };
+  const MAX_RETRIES = 3;
+  let lastError;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const tx = await contractWithSigner.storeFile(fileInfo.hash, 1);
+      return { success: true, txHash: tx.hash, attemptId };
+    } catch (error) {
+      lastError = error;
+      const isRateLimit = error.message?.includes("Too Many Requests") || error.code === "BAD_DATA";
+      if (isRateLimit && attempt < MAX_RETRIES - 1) {
+        console.warn(`Broadcast rate-limited (attempt ${attempt + 1}), retrying in ${(attempt + 1) * 3}s…`);
+        await sleep((attempt + 1) * 3000);
+        continue;
+      }
+      break;
+    }
   }
+
+  const isRateLimit = lastError?.message?.includes("Too Many Requests") || lastError?.code === "BAD_DATA";
+  console.error("Broadcast failed:", lastError?.message);
+  await updateAttempt(attemptId, "failed", { errorMessage: lastError?.message });
+  return {
+    success: false,
+    message: isRateLimit
+      ? "Le réseau Ethereum est surchargé, veuillez réessayer dans quelques secondes."
+      : lastError?.message,
+  };
 }
 
 // Step 2: lightweight receipt check — called by the client every few seconds
@@ -113,15 +133,36 @@ export async function checkReceipt(txHash) {
   }
 }
 
-// Step 3: called once after client confirms receipt — updates DB
-export async function finalizeTransaction(txHash, fileHash, attemptId) {
+// Step 3: called once after client confirms receipt — upserts file in DB
+// userEmail is passed from the client session to avoid relying solely on getServerSession in a server action
+export async function finalizeTransaction(txHash, fileHash, fileName, userEmail, attemptId) {
   try {
     await updateAttempt(attemptId, "success", { transactionHash: txHash });
 
-    try {
-      await updateFile({ transaction_hash: txHash, hash: fileHash });
-    } catch (dbError) {
-      console.error("DB update failed:", dbError.message);
+    // Resolve DB user ID — prefer client-passed email, fall back to server session
+    let resolvedEmail = userEmail ?? null;
+    if (!resolvedEmail) {
+      const session = await getServerSession(authOptions);
+      resolvedEmail = session?.user?.email ?? null;
+    }
+
+    let userId = null;
+    if (resolvedEmail) {
+      const userResponse = await sql`SELECT user_account_id FROM user_account WHERE email = ${resolvedEmail}`;
+      if (userResponse.rowCount > 0) userId = userResponse.rows[0].user_account_id;
+    }
+
+    console.log("finalizeTransaction: email=", resolvedEmail, "userId=", userId, "hash=", fileHash);
+
+    // Upsert — insert if storeFile never ran (e.g. credits flow), update tx hash if it did
+    const existing = await sql`SELECT id_user FROM file WHERE hash = ${fileHash}`;
+    console.log("finalizeTransaction: existing rows=", existing.rowCount);
+    if (existing.rowCount === 0) {
+      const inserted = await sql`INSERT INTO file (hash, name, transaction_hash, id_user, lastmodified) VALUES (${fileHash}, ${fileName}, ${txHash}, ${userId}, NOW()) RETURNING hash`;
+      console.log("finalizeTransaction: inserted", inserted.rowCount, "row(s)");
+    } else {
+      const updated = await sql`UPDATE file SET transaction_hash = ${txHash}, id_user = COALESCE(id_user, ${userId}) WHERE hash = ${fileHash} RETURNING hash`;
+      console.log("finalizeTransaction: updated", updated.rowCount, "row(s)");
     }
 
     try {
@@ -132,7 +173,7 @@ export async function finalizeTransaction(txHash, fileHash, attemptId) {
 
     return { success: true };
   } catch (error) {
-    console.error("Finalize failed:", error.message);
+    console.error("finalizeTransaction FAILED:", error.message);
     await updateAttempt(attemptId, "failed", { errorMessage: error.message });
     return { success: false, message: error.message };
   }

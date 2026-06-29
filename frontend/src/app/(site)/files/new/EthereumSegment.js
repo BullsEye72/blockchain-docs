@@ -3,7 +3,7 @@ import { connectToContract, broadcastToEthereum, checkReceipt, finalizeTransacti
 import { useEffect, useState, useRef } from "react";
 
 const ETHERSCAN_URL = process.env.NEXT_PUBLIC_ETHERSCAN_URL || "https://etherscan.io";
-const POLL_INTERVAL_MS = 5000;
+const POLL_INTERVAL_MS = 12000; // ~1 block time; keeps Infura request rate low
 
 /*
   stages:
@@ -15,7 +15,7 @@ const POLL_INTERVAL_MS = 5000;
  -1 — failed
 */
 
-export default function EthereumSegment({ dispatch = () => {}, state, fileInfo, onSuccess }) {
+export default function EthereumSegment({ dispatch = () => {}, state, fileInfo, userEmail, onSuccess }) {
   const [stage, setStage] = useState(0);
   const [txHash, setTxHash] = useState(null);
   const [error, setError] = useState(null);
@@ -46,7 +46,12 @@ export default function EthereumSegment({ dispatch = () => {}, state, fileInfo, 
       clearInterval(timerRef.current);
 
       if (result.status === "confirmed") {
-        await finalizeTransaction(hash, fileHash, attemptIdRef.current);
+        const finalized = await finalizeTransaction(hash, fileHash, fileInfo.name, userEmail ?? null, attemptIdRef.current);
+        if (!finalized.success) {
+          setStage(-1);
+          setError(finalized.message || "Enregistrement en base échoué après la blockchain.");
+          return;
+        }
         setStage(4);
         if (onSuccess) onSuccess();
       } else {

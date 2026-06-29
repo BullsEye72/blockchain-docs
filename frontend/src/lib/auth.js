@@ -55,14 +55,21 @@ export const authOptions = {
       return true;
     },
     async session({ session, token }) {
-      session.user.id = token.id;
+      session.user.id = token.dbId ?? null;
       session.user.email = token.email;
       return session;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id;
         token.email = user.email;
+        if (account?.provider === "google") {
+          // Look up the DB user_account_id — Google's user.id is not our DB ID
+          const response = await sql`SELECT user_account_id FROM user_account WHERE email = ${user.email}`;
+          token.dbId = response.rows[0]?.user_account_id ?? null;
+        } else {
+          // Magic-link provider returns our DB ID directly
+          token.dbId = user.id;
+        }
       }
       return token;
     },
