@@ -3,27 +3,18 @@
 import { sql } from "@vercel/postgres";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { NextResponse } from "next/server";
 
 export async function getFiles() {
   const session = await getServerSession(authOptions);
+  if (!session) return [];
 
-  if (!session) {
-    return NextResponse.json({ error: "You need to be logged in" }, { status: 401 });
-  }
-
-  try {
-    const { rows } = await sql`
-      select file.name, user_account.email, file.hash, file.transaction_hash, file.lastmodified as "lastModified"
-      from file
-      left join user_account on user_account.user_account_id = file.id_user
-      where user_account.email = ${session.user.email}
-    `;
-    return NextResponse.json(rows);
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  const { rows } = await sql`
+    SELECT file.name, user_account.email, file.hash, file.transaction_hash, file.lastmodified AS "lastModified"
+    FROM file
+    LEFT JOIN user_account ON user_account.user_account_id = file.id_user
+    WHERE user_account.email = ${session.user.email}
+  `;
+  return rows;
 }
 
 export async function storeFile(data) {

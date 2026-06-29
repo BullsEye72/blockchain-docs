@@ -26,15 +26,9 @@ import { checkIfFileExistsOnBlockchain } from "./actions";
 
 async function getData() {
   try {
-    const res = await getFiles();
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch data", res.status, res.statusText);
-    }
-    return res.json();
+    return await getFiles();
   } catch (error) {
     console.error("Error fetching data:", error);
-    throw new Error("Failed to fetch data", error.message);
     return [];
   }
 }
