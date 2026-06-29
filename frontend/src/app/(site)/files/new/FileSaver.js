@@ -7,8 +7,7 @@ import FileInfoSegment from "./FileInfoSegment";
 import EthereumSegment from "./EthereumSegment";
 import FileInput from "./FileInput";
 import StripeForm from "@/app/stripe/Form";
-import { checkCreditForFileUpload, getCreditCount, checkIfFileExistsOnBlockchain } from "@/app/(site)/files/actions";
-import { connectToContract } from "@/app/(site)/files/new/EthereumSend";
+import { checkCreditForFileUpload, getCreditCount } from "@/app/(site)/files/actions";
 import { storeFile } from "@/app/actions";
 import { useSession } from "next-auth/react";
 
@@ -43,22 +42,8 @@ export default function FileSaver() {
   }, [fileInfo]);
 
   const handleSubmit = async () => {
-    // Step 1: verify the contract is reachable
-    const connection = await connectToContract();
-    if (!connection.success) {
-      setErrorMessage({ header: "Erreur blockchain", message: "Impossible de se connecter au contrat. Réessayez dans quelques instants.", type: "error" });
-      return;
-    }
-
-    // Step 2: check if already on-chain — free, no payment needed
-    const { fileOwnerId } = await checkIfFileExistsOnBlockchain(fileInfo.hash, "");
-    if (Number(fileOwnerId) !== 0) {
-      setErrorMessage({ header: "Déjà enregistré", message: "Ce fichier est déjà présent sur la blockchain.", type: "warning" });
-      return;
-    }
-
-    // Pre-save to DB so the Stripe webhook can link the file to the account
     try {
+      // Pre-save to DB so the Stripe webhook can link the file to the account
       await storeFile({ userId: session?.user?.id ?? null, hash: fileInfo.hash, name: fileInfo.name });
     } catch (e) {
       // Already in DB — fine, continue
@@ -91,6 +76,7 @@ export default function FileSaver() {
         onComplete={handleStripeComplete}
         fileHash={fileInfo.hash}
         fileName={fileInfo.name}
+        userEmail={session?.user?.email ?? null}
       />
 
       {session && creditCount !== null && (

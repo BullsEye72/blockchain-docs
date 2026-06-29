@@ -7,18 +7,18 @@ import { Modal, ModalContent, ModalHeader } from "semantic-ui-react";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-export default function StripeForm({ open, onClose, onComplete, fileHash, fileName }) {
+export default function StripeForm({ open, onClose, onComplete, fileHash, fileName, userEmail }) {
   const [isComplete, setIsComplete] = useState(false);
 
   const fetchClientSecret = useCallback(async () => {
     const res = await fetch("/api/stripe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fileHash, fileName }),
+      body: JSON.stringify({ fileHash, fileName, userEmail }),
     });
     const data = await res.json();
     return data.clientSecret;
-  }, [fileHash, fileName]);
+  }, [fileHash, fileName, userEmail]);
 
   const handleComplete = () => {
     setIsComplete(true);

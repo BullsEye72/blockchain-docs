@@ -5,9 +5,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   const body = await req.json();
-  const { fileHash, fileName } = body || {};
+  const { fileHash, fileName, userEmail } = body || {};
 
   const sessionParams = {
+    ...(userEmail ? { customer_email: userEmail } : {}),
     ui_mode: "embedded",
     line_items: [
       {
