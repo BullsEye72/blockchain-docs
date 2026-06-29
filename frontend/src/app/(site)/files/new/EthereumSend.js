@@ -8,12 +8,20 @@ import { getFileHashes } from "@/app/api/files/route";
 import { updateFile } from "@/app/actions";
 import { decrementCredit } from "@/app/(site)/files/actions";
 
-const provider = new InfuraProvider("sepolia", process.env.INFURA_API_KEY);
-const factoryContract = new ethers.Contract(
-  process.env.FILES_STORAGE_CONTRACT_ADDRESS,
-  FileStorageContract.abi,
-  provider
-);
+let _provider = null;
+let _factoryContract = null;
+
+function getContract() {
+  if (!_factoryContract) {
+    _provider = new InfuraProvider("sepolia", process.env.INFURA_API_KEY);
+    _factoryContract = new ethers.Contract(
+      process.env.FILES_STORAGE_CONTRACT_ADDRESS,
+      FileStorageContract.abi,
+      _provider
+    );
+  }
+  return { provider: _provider, factoryContract: _factoryContract };
+}
 
 async function logAttempt(fileHash, fileName, userEmail) {
   const result = await sql`
@@ -37,6 +45,7 @@ async function updateAttempt(id, status, { transactionHash = null, errorMessage 
 
 export async function connectToContract() {
   try {
+    const { factoryContract } = getContract();
     const defaultFile = await factoryContract.files("");
     if (Number(defaultFile) === 0) {
       return { success: true, message: "Connected to contract successfully" };
@@ -50,6 +59,7 @@ export async function connectToContract() {
 
 export async function checkManagerRights() {
   try {
+    const { provider, factoryContract } = getContract();
     const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
     const contractWithSigner = factoryContract.connect(signer);
     const manager = await contractWithSigner.manager();
@@ -93,6 +103,7 @@ export async function sendToEthereum(fileInfo) {
   const attemptId = await logAttempt(fileInfo.hash, fileInfo.name, userEmail);
 
   try {
+    const { provider, factoryContract } = getContract();
     const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
     const contractWithSigner = factoryContract.connect(signer);
 

@@ -6,18 +6,24 @@ import { sql } from "@vercel/postgres";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-const provider = new InfuraProvider("sepolia", process.env.INFURA_API_KEY);
-// const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+let _provider = null;
+let _storageContract = null;
 
-const storageContract = new ethers.Contract(
-  process.env.FILES_STORAGE_CONTRACT_ADDRESS,
-  FileStorageContract.abi,
-  provider
-);
-
-// const contractWithSigner = storageContract.connect(signer);
+function getContract() {
+  if (!_storageContract) {
+    _provider = new InfuraProvider("sepolia", process.env.INFURA_API_KEY);
+    _storageContract = new ethers.Contract(
+      process.env.FILES_STORAGE_CONTRACT_ADDRESS,
+      FileStorageContract.abi,
+      _provider
+    );
+  }
+  return { provider: _provider, storageContract: _storageContract };
+}
 
 export async function checkIfFileExistsOnBlockchain(fileHash, transactionAddress) {
+  const { provider, storageContract } = getContract();
+
   // Verify via transaction receipt — works regardless of the userId stored in the contract
   if (transactionAddress && transactionAddress.length === 66) {
     try {
