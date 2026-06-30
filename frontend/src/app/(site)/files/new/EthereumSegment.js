@@ -26,7 +26,7 @@ function StepRow({ stepStage, currentStage, label, desc, Icon, txHash }) {
   return (
     <div className={`flex items-start gap-3 py-3 ${!done && !active ? "opacity-40" : ""}`}>
       <div className={`mt-0.5 shrink-0 ${done ? "text-green-500" : active ? "text-blue-500" : "text-gray-300"}`}>
-        {active ? <Loader2 size={18} className="animate-spin" /> : <Icon size={18} />}
+        {active && stepStage < 4 ? <Loader2 size={18} className="animate-spin" /> : <Icon size={18} />}
       </div>
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium ${done ? "text-green-700" : active ? "text-blue-700" : "text-gray-500"}`}>

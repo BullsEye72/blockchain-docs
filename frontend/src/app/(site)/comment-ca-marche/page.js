@@ -1,6 +1,6 @@
 "use client";
 
-import { Fingerprint, Coins, BadgeCheck, Clock, Lock, HelpCircle } from "lucide-react";
+import { Fingerprint, Coins, BadgeCheck, Clock, Lock, HelpCircle, Terminal } from "lucide-react";
 
 export default function CommentCaMarchePage() {
   return (
@@ -93,6 +93,42 @@ export default function CommentCaMarchePage() {
             <li>L'identité de l'auteur (la transaction est signée par notre portefeuille applicatif).</li>
             <li>La propriété intellectuelle ou les droits associés au contenu.</li>
           </ul>
+        </section>
+
+        <section className="py-12">
+          <div className="flex items-center gap-3 mb-4">
+            <Terminal className="text-gray-600 shrink-0" size={28} strokeWidth={1.5} />
+            <h2 className="text-2xl font-light">Vérifier l'empreinte localement</h2>
+          </div>
+          <p className="text-gray-700 leading-relaxed mb-6">
+            Vous pouvez calculer l'empreinte SHA-256 de n'importe quel fichier avec les outils
+            intégrés à votre système d'exploitation, sans installer quoi que ce soit. Le résultat
+            doit correspondre exactement à celui affiché par DocuChain.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-1.5">Windows — PowerShell</p>
+              <div className="bg-gray-900 rounded-lg px-4 py-3 font-mono text-sm text-green-400 overflow-x-auto whitespace-nowrap">
+                Get-FileHash &quot;C:\chemin\vers\fichier.pdf&quot; -Algorithm SHA256
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-1.5">Linux — Bash</p>
+              <div className="bg-gray-900 rounded-lg px-4 py-3 font-mono text-sm text-green-400 overflow-x-auto whitespace-nowrap">
+                sha256sum /chemin/vers/fichier.pdf
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-1.5">macOS — Terminal</p>
+              <div className="bg-gray-900 rounded-lg px-4 py-3 font-mono text-sm text-green-400 overflow-x-auto whitespace-nowrap">
+                shasum -a 256 /chemin/vers/fichier.pdf
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mt-5">
+            Comparez la valeur obtenue avec l'empreinte affichée dans DocuChain ou inscrite dans la
+            transaction Ethereum. Si elles correspondent, l'intégrité du fichier est confirmée.
+          </p>
         </section>
 
         <section className="py-12">

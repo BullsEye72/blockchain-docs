@@ -12,6 +12,9 @@ const roboto = Roboto({ weight: "400", subsets: ["latin"] });
 export const metadata = {
   title: "DocuChain",
   description: "Certification de documents par la blockchain Ethereum",
+  verification: {
+    google: "0mF7I2x3q5CCNMIdM3ddX7WGePjEOWkCJx3XNOwBYyo",
+  },
 };
 
 export default async function RootLayout({ children }) {
