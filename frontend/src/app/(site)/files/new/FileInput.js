@@ -1,104 +1,41 @@
-import { Button, Segment, Header, Icon, Form, FormField, Dimmer, Loader } from "semantic-ui-react";
+"use client";
+
 import { useRef, useState } from "react";
-import { hashFile } from "@/app/hash";
+import { UploadCloud } from "lucide-react";
 
-/**
- * Checks if the file size is within the limit (500mb limit)
- * @param {*} file
- * @returns
- */
-const checkFileSize = function (file) {
-  const fileSizeLimit = 512 * 1024 * 1024; // 500mb in bytes
-  if (file.size > fileSizeLimit) {
-    console.error("File size limit exceeded");
-    // dispatch({
-    //   type: "SET_MESSAGE",
-    //   payload: {
-    //     text: "The file size exceeds the limit of 1gb",
-    //     title: "File size limit exceeded",
-    //     type: "error",
-    //   },
-    // });
-    return false;
-  }
-
-  return true;
-};
+const MAX_SIZE = 512 * 1024 * 1024; // 500 MB
 
 export default function FileInput({ state, setFileInfo }) {
-  const [buttonColor, setButtonColor] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
-
-  const [canUseFileInput, setCanUseFileInput] = useState(true);
   const dropRef = useRef();
 
-  const handleDrop = (event) => {
-    event.preventDefault();
-    handleFileChange(event);
-  };
-
-  const handleDragLeave = (event) => {
-    event.preventDefault();
-
-    if (dropRef.current.contains(event.relatedTarget)) return; // Prevent drag leave when hovering over children
-    setButtonColor("");
-    setIsDragOver(false);
-  };
-
-  const handleDragEnter = (event) => {
-    event.preventDefault();
-    setButtonColor("blue");
-    setIsDragOver(true);
-  };
-
-  const handleFileChange = async (event) => {
-    const selectedFile = event.target.files?.[0] || event.dataTransfer.files[0];
-    const fileSizeIsCorrect = checkFileSize(selectedFile);
-
-    if (fileSizeIsCorrect === false) {
-      setFileInfo({ status: "error", message: "The file size exceeds the limit of 500mb" });
+  const process = (file) => {
+    if (!file) return;
+    if (file.size > MAX_SIZE) {
+      setFileInfo({ status: "error", message: "Le fichier dépasse la limite de 500 Mo." });
       return;
     }
-
-    // Update the file info
-    setFileInfo({
-      status: "success",
-      message: "File selected",
-      name: selectedFile.name,
-      lastModified: selectedFile.lastModified,
-      hash: "",
-      processingTime: "",
-      file: selectedFile,
-    });
-
-    setButtonColor("green");
+    setFileInfo({ status: "success", name: file.name, lastModified: file.lastModified, hash: "", file });
   };
 
+  const onDrop = (e) => { e.preventDefault(); setIsDragOver(false); process(e.dataTransfer.files[0]); };
+  const onDragOver = (e) => e.preventDefault();
+  const onDragEnter = (e) => { e.preventDefault(); setIsDragOver(true); };
+  const onDragLeave = (e) => { e.preventDefault(); if (!dropRef.current?.contains(e.relatedTarget)) setIsDragOver(false); };
+
   return (
-    <Segment
-      disabled={!state}
+    <label
       ref={dropRef}
-      onDrop={handleDrop}
-      onDragLeave={handleDragLeave}
-      onDragEnter={handleDragEnter}
+      onDrop={onDrop} onDragOver={onDragOver} onDragEnter={onDragEnter} onDragLeave={onDragLeave}
+      className={`flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-xl p-10 cursor-pointer transition-colors ${
+        !state ? "opacity-40 pointer-events-none" : ""
+      } ${isDragOver ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300 bg-gray-50"}`}
     >
-      <Form>
-        <FormField>
-          <Button className={buttonColor} size="huge" as="label" htmlFor="fileInput" disabled={!state}>
-            <Icon name="cloud upload" />
-            Glissez & Déposez ou <u>Cliquez ici</u> pour sélectionner un fichier
-          </Button>
-          <input
-            type="file"
-            id="fileInput"
-            onChange={handleFileChange}
-            name="fileInput"
-            className="border border-gray-300 p-2"
-            style={{ display: "none" }}
-            disabled={!state}
-          />
-        </FormField>
-      </Form>
-    </Segment>
+      <UploadCloud className={isDragOver ? "text-blue-400" : "text-gray-300"} size={36} strokeWidth={1} />
+      <p className="text-sm text-gray-500 text-center">
+        Glissez & déposez ou <span className="underline">cliquez pour sélectionner</span> un fichier
+      </p>
+      <input type="file" className="sr-only" onChange={(e) => process(e.target.files[0])} disabled={!state} />
+    </label>
   );
 }

@@ -1,14 +1,7 @@
 import Stripe from "stripe";
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 import { NextResponse } from "next/server";
 
-const events = await stripe.events.list({
-  limit: 3,
-});
-
-const customers = await stripe.customers.list({
-  limit: 3,
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function GET(req, { params }) {
   const session_id = params.session_id;

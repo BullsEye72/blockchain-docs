@@ -1,89 +1,55 @@
-import { Button, Container, Divider, Header, Segment, Grid, Image } from "semantic-ui-react";
+"use client";
+
+import { Fingerprint, Coins, Scale } from "lucide-react";
+
+const articles = [
+  {
+    title: "Qu'est-ce qu'une empreinte SHA-256 ?",
+    date: "Juin 2025",
+    description:
+      "L'algorithme SHA-256 produit une empreinte unique de 64 caractères pour n'importe quel fichier. Comprendre son fonctionnement, c'est comprendre pourquoi il est impossible de falsifier une preuve DocuChain.",
+    Icon: Fingerprint,
+    iconColor: "text-blue-500",
+  },
+  {
+    title: "Blockchain et preuve d'existence : comment ça marche vraiment ?",
+    date: "Mai 2025",
+    description:
+      "La blockchain n'est pas qu'un buzzword : c'est un registre distribué où chaque entrée est vérifiable et immuable. On vous explique ce que cela signifie concrètement pour la certification de vos documents.",
+    Icon: Coins,
+    iconColor: "text-purple-500",
+  },
+  {
+    title: "5 cas d'usage concrets pour les professions juridiques",
+    date: "Avril 2025",
+    description:
+      "Des contrats aux correspondances importantes, la preuve d'antériorité a de nombreuses applications pour les avocats, notaires et juristes d'entreprise. Tour d'horizon des situations où DocuChain peut faire la différence.",
+    Icon: Scale,
+    iconColor: "text-gray-400",
+  },
+];
 
 export default function BlogPage() {
   return (
     <>
-      <Segment style={{ padding: "8em 0em" }} vertical>
-        <Grid container stackable verticalAlign="middle">
-          <Grid.Row>
-            <Grid.Column width={8}>
-              <Header as="h3" style={{ fontSize: "2em" }}>
-                We Help Companies and Companions
-              </Header>
-              <p style={{ fontSize: "1.33em" }}>
-                We can give your company superpowers to do things that they never thought possible. Let us delight your
-                customers and empower your needs... through pure data analytics.
-              </p>
-              <Header as="h3" style={{ fontSize: "2em" }}>
-                We Make Bananas That Can Dance
-              </Header>
-              <p style={{ fontSize: "1.33em" }}>
-                {`Yes that's right, you thought it was the stuff of dreams, but even bananas can be bioengineered.`}
-              </p>
-            </Grid.Column>
-            <Grid.Column floated="right" width={6}>
-              <Image bordered rounded size="large" src="/images/wireframe/white-image.png" alt="template image" />
-            </Grid.Column>
-          </Grid.Row>
-          <Grid.Row>
-            <Grid.Column textAlign="center">
-              <Button size="huge">Check Them Out</Button>
-            </Grid.Column>
-          </Grid.Row>
-        </Grid>
-      </Segment>
+      <section className="bg-slate-900 text-white text-center py-16 px-4">
+        <h1 className="text-4xl font-light mb-3">Blog</h1>
+        <p className="text-slate-400">Blockchain, certification de documents et cas d'usage.</p>
+      </section>
 
-      <Segment style={{ padding: "0em" }} vertical>
-        <Grid celled="internally" columns="equal" stackable>
-          <Grid.Row textAlign="center">
-            <Grid.Column style={{ paddingBottom: "5em", paddingTop: "5em" }}>
-              <Header as="h3" style={{ fontSize: "2em" }}>
-                {`"What a Company"`}
-              </Header>
-              <p style={{ fontSize: "1.33em" }}>That is what they all say about us</p>
-            </Grid.Column>
-            <Grid.Column style={{ paddingBottom: "5em", paddingTop: "5em" }}>
-              <Header as="h3" style={{ fontSize: "2em" }}>
-                {`"I shouldn't have gone with their competitor."`}
-              </Header>
-              <p style={{ fontSize: "1.33em" }}>
-                <Image alt="avatar" avatar src="/images/avatar/large/nan.jpg" />
-                <b>Nan</b> Chief Fun Officer Acme Toys
-              </p>
-            </Grid.Column>
-          </Grid.Row>
-        </Grid>
-      </Segment>
-      <Segment style={{ padding: "8em 0em" }} vertical>
-        <Container text>
-          <Header as="h3" style={{ fontSize: "2em" }}>
-            Breaking The Grid, Grabs Your Attention
-          </Header>
-          <p style={{ fontSize: "1.33em" }}>
-            Instead of focusing on content creation and hard work, we have learned how to master the art of doing
-            nothing by providing massive amounts of whitespace and generic content that can seem massive, monolithic and
-            worth your attention.
-          </p>
-          <Button as="a" size="large">
-            Read More
-          </Button>
-
-          <Divider as="h4" className="header" horizontal style={{ margin: "3em 0em", textTransform: "uppercase" }}>
-            <a href="#">Case Studies</a>
-          </Divider>
-
-          <Header as="h3" style={{ fontSize: "2em" }}>
-            Did We Tell You About Our Bananas?
-          </Header>
-          <p style={{ fontSize: "1.33em" }}>
-            {`Yes I know you probably disregarded the earlier boasts as non-sequitur filler content, but it's really true.
-            It took years of gene splicing and combinatory DNA research, but our bananas can really dance.`}
-          </p>
-          <Button as="a" size="large">
-            {`I'm Still Quite Interested`}
-          </Button>
-        </Container>
-      </Segment>
+      <section className="py-16 px-4">
+        <div className="max-w-5xl mx-auto grid sm:grid-cols-3 gap-6">
+          {articles.map((article) => (
+            <div key={article.title} className="border border-gray-200 rounded-xl p-6 flex flex-col hover:shadow-md transition-shadow">
+              <article.Icon className={`mb-4 ${article.iconColor}`} size={28} strokeWidth={1.5} />
+              <p className="text-xs text-gray-400 mb-2">{article.date}</p>
+              <h2 className="font-semibold text-gray-900 mb-3 leading-snug">{article.title}</h2>
+              <p className="text-sm text-gray-600 leading-relaxed flex-1">{article.description}</p>
+              <p className="text-xs text-gray-400 mt-4">Bientôt disponible</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </>
   );
 }

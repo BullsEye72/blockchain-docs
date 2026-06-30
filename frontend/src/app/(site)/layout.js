@@ -1,20 +1,17 @@
 import { Roboto } from "next/font/google";
 import "../globals.css";
-import "semantic-ui-css/semantic.min.css";
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import SessionProvider from "../components/SessionProvider";
-
 import HeaderMenu from "../components/layout/HeaderMenu";
 import Footer from "../components/layout/Footer";
-import UserForm from "../components/UserForm";
 
-const inter = Roboto({ weight: "400", subsets: ["latin"] });
+const roboto = Roboto({ weight: "400", subsets: ["latin"] });
 
 export const metadata = {
-  title: "Docu-Chain",
-  description: "Outil de gestion de documents décentralisé",
+  title: "DocuChain",
+  description: "Certification de documents par la blockchain Ethereum",
 };
 
 export default async function RootLayout({ children }) {
@@ -22,13 +19,13 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="fr">
-      <body className={inter.className}>
+      <body className={roboto.className}>
         <SessionProvider session={session}>
-          <HeaderMenu />
-
-          {children}
-
-          <Footer />
+          <div className="min-h-screen flex flex-col">
+            <HeaderMenu />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
         </SessionProvider>
       </body>
     </html>

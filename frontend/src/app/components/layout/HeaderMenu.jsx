@@ -1,42 +1,30 @@
 "use client";
-/* Heads up!
- * Neither Semantic UI nor Semantic UI React offer a responsive navbar, however, it can be implemented easily.
- * It can be more complicated, but you can create really flexible markup.
- */
 
-import { useState } from "react";
-import { Button, Container, Menu, Segment } from "semantic-ui-react";
-import HomepageHeading from "./HomePageHeading";
-import Account from "../Account";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import Account from "../Account";
 
 export default function HeaderMenu() {
-  const [fixed, setFixed] = useState(false);
-  const session = useSession();
+  const { data: session } = useSession();
 
   return (
-    <Segment inverted textAlign="center" style={{ minHeight: 400, padding: "1em 0em 3em 0em" }} vertical>
-      <Menu fixed={fixed ? "top" : null} inverted={!fixed} pointing={!fixed} secondary={!fixed} size="large">
-        <Container>
-          <Menu.Item>
-            <Link href="/">Accueil</Link>
-          </Menu.Item>
-          {session && (
-            <Menu.Item>
-              <Link href="/files">Fichiers</Link>
-            </Menu.Item>
-          )}
-          <Menu.Item>
-            <Link href="/blog">Blog</Link>
-          </Menu.Item>
+    <nav className="bg-slate-900 text-white">
+      <div className="max-w-6xl mx-auto px-4 flex items-center h-14 gap-6">
+        <Link href="/" className="font-semibold text-lg tracking-tight text-white hover:text-blue-300 transition-colors">
+          DocuChain
+        </Link>
 
-          <Menu.Item position="right">
-            <Account />
-          </Menu.Item>
-        </Container>
-      </Menu>
-      <HomepageHeading mobile />
-    </Segment>
+        <div className="flex items-center gap-1 text-sm flex-1">
+          <Link href="/outil" className="px-3 py-1.5 rounded hover:bg-slate-700 transition-colors">Outil</Link>
+          <Link href="/comment-ca-marche" className="px-3 py-1.5 rounded hover:bg-slate-700 transition-colors">Comment ça marche</Link>
+          <Link href="/blog" className="px-3 py-1.5 rounded hover:bg-slate-700 transition-colors">Blog</Link>
+          {session && (
+            <Link href="/files" className="px-3 py-1.5 rounded hover:bg-slate-700 transition-colors">Mes fichiers</Link>
+          )}
+        </div>
+
+        <Account />
+      </div>
+    </nav>
   );
 }

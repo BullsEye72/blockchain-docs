@@ -1,142 +1,65 @@
 "use client";
 
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardMeta,
-  CardDescription,
-  Icon,
-  TableRow,
-  TableCell,
-  Button,
-  Popup,
-  Header,
-} from "semantic-ui-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { FileText, CheckCircle2, XCircle, Loader2, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
-export default function FileCard({ file, index, checkIfFileExistsOnBlockchain, table = false }) {
-  const [ethStatus, setEthStatus] = useState(0);
+const ETHERSCAN_URL = process.env.NEXT_PUBLIC_ETHERSCAN_URL || "https://etherscan.io";
+
+const truncate = (hash = "") => (hash.length <= 12 ? hash : `${hash.slice(0, 6)}…${hash.slice(-6)}`);
+
+export default function FileCard({ file, checkIfFileExistsOnBlockchain }) {
+  const [ethStatus, setEthStatus] = useState(0); // 0=loading, 1=found, -1=notfound
   const [txTimestamp, setTxTimestamp] = useState(null);
 
   useEffect(() => {
     async function check() {
       setEthStatus(0);
-
-      const { fileOwnerId: userIdFromBlockChain, transactionTimestamp } = await checkIfFileExistsOnBlockchain(
-        file.hash,
-        file.transactionHash
-      );
-      const userId = Number(userIdFromBlockChain);
-
-      if (userId === 0) {
-        setEthStatus(-1);
-        return;
-      } else {
-        setEthStatus(1);
-        setTxTimestamp(new Date(transactionTimestamp).toLocaleDateString());
-      }
+      const { fileOwnerId, transactionTimestamp } = await checkIfFileExistsOnBlockchain(file.hash, file.transactionHash);
+      if (Number(fileOwnerId) === 0) { setEthStatus(-1); return; }
+      setEthStatus(1);
+      setTxTimestamp(new Date(transactionTimestamp).toLocaleDateString());
     }
-
     check();
   }, [file, checkIfFileExistsOnBlockchain]);
 
-  const formatHash = (hash) => {
-    return hash.slice(0, 5) + "..." + hash.slice(-5);
-  };
-
-  // Render a table row if table is true
-  if (table) {
-    return (
-      <TableRow key={index}>
-        <TableCell positive={ethStatus === 1} negative={ethStatus === -1}>
-          <Icon name="file text" />
-        </TableCell>
-        <TableCell>
-          <strong>{file.name}</strong>
-        </TableCell>
-
-        <Popup key={index} position={"right center"} trigger={<TableCell>{formatHash(file.hash)}</TableCell>}>
-          <Header as="h4">Code de vérification</Header>
-          <p>{file.hash}</p>
-        </Popup>
-
-        <TableCell>{file.lastModified}</TableCell>
-
-        {ethStatus === 1 && (
-          <>
-            <TableCell>
-              <Icon name="green checkmark" />
-            </TableCell>
-            <TableCell>{txTimestamp}</TableCell>
-            <TableCell>
-              <Button icon labelPosition="left">
-                <Icon name="ethereum" />
-                <Link href={file.transactionLink} target="_blank" rel="noopener noreferrer">
-                  Voir sur etherscan
-                </Link>
-              </Button>
-            </TableCell>
-          </>
-        )}
-        {ethStatus === -1 && (
-          <>
-            <TableCell>
-              <Icon name="close red" />
-            </TableCell>
-            <TableCell colSpan="2" negative>
-              Pas trouvé sur la blockchain
-            </TableCell>
-          </>
-        )}
-        {ethStatus === 0 && (
-          <>
-            <TableCell>
-              <Icon loading name="notched circle" />
-            </TableCell>
-            <TableCell>Recherche sur la blockchain</TableCell>
-          </>
-        )}
-      </TableRow>
-    );
-  }
-
-  // Render a standard semantic ui react card is table is false
   return (
-    <Card color={file.cardColor} key={index} className="mb-4">
-      <CardContent>
-        <CardHeader>
-          <Icon name="file text" />
-          Name : {file.name}{" "}
-        </CardHeader>
-        <CardMeta style={{ wordWrap: "anywhere" }}>
-          <Icon name="hashtag" />: {file.hash}
-        </CardMeta>
-        <CardDescription style={{ wordWrap: "break-word" }}>
-          <Icon name="calendar" />
-          <strong>Last Modified:</strong> {file.lastModified} <br />
-        </CardDescription>
-      </CardContent>
-      <CardContent>
-        {ethStatus === 1 && (
-          <>
-            <Icon name="calendar check outline" />
-            <strong>Transaction Timestamp:</strong> {txTimestamp} <br />
-            <Icon name="ethereum" />
-            <Link href={file.transactionLink} target="_blank" rel="noopener noreferrer">
-              View on etherscan
+    <tr className="border-b border-gray-100 hover:bg-gray-50 text-sm">
+      <td className="py-3 px-4">
+        <FileText size={16} className={ethStatus === 1 ? "text-green-500" : ethStatus === -1 ? "text-red-400" : "text-gray-300"} />
+      </td>
+      <td className="py-3 px-4 font-medium text-gray-900 max-w-[200px] truncate">{file.name}</td>
+      <td className="py-3 px-4 font-mono text-xs text-gray-400" title={file.hash}>{truncate(file.hash)}</td>
+      <td className="py-3 px-4 text-gray-500">{file.lastModified}</td>
+
+      {ethStatus === 0 && (
+        <>
+          <td className="py-3 px-4"><Loader2 size={14} className="animate-spin text-gray-400" /></td>
+          <td className="py-3 px-4 text-gray-400 text-xs">Vérification…</td>
+          <td />
+        </>
+      )}
+      {ethStatus === 1 && (
+        <>
+          <td className="py-3 px-4"><CheckCircle2 size={16} className="text-green-500" /></td>
+          <td className="py-3 px-4 text-gray-500">{txTimestamp}</td>
+          <td className="py-3 px-4">
+            <Link
+              href={file.transactionLink}
+              target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-blue-600 hover:underline text-xs"
+            >
+              Etherscan <ExternalLink size={11} />
             </Link>
-          </>
-        )}
-        {ethStatus === -1 && <>❌ Not found on blockchain</>}
-        {ethStatus === 0 && (
-          <>
-            <Icon loading name="notched circle" />
-            Checking on blockchain
-          </>
-        )}
-      </CardContent>
-    </Card>
+          </td>
+        </>
+      )}
+      {ethStatus === -1 && (
+        <>
+          <td className="py-3 px-4"><XCircle size={16} className="text-red-400" /></td>
+          <td className="py-3 px-4 text-red-400 text-xs" colSpan={2}>Non trouvé sur la blockchain</td>
+        </>
+      )}
+    </tr>
   );
 }

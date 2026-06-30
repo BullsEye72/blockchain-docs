@@ -1,35 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Icon, Grid, GridRow, Container } from "semantic-ui-react";
+import { Search, Save } from "lucide-react";
 import FileChecker from "./FileChecker";
-
 import FileSaver from "@/app/(site)/files/new/FileSaver";
 
 export default function FileCardSelector() {
-  const [checkFileMode, setCheckFileMode] = useState(false);
-
-  const handleClick = (e) => {
-    setCheckFileMode(!checkFileMode);
-  };
+  const [mode, setMode] = useState("save");
 
   return (
-    <Container>
-      <Grid>
-        <GridRow centered columns={2}>
-          <Button toggle active={checkFileMode} onClick={handleClick} size="huge" attached="left">
-            <Icon name="search" />
-            Vérifier mon fichier
-          </Button>
+    <div>
+      <div className="flex rounded-lg overflow-hidden border border-gray-200 w-fit mx-auto mb-8">
+        <button
+          onClick={() => setMode("check")}
+          className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-colors ${
+            mode === "check" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          <Search size={15} /> Vérifier un fichier
+        </button>
+        <button
+          onClick={() => setMode("save")}
+          className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-colors ${
+            mode === "save" ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          <Save size={15} /> Enregistrer un fichier
+        </button>
+      </div>
 
-          <Button toggle active={!checkFileMode} onClick={handleClick} size="huge" attached="right">
-            <Icon name="save" />
-            Enregister mon fichier
-          </Button>
-        </GridRow>
-      </Grid>
-
-      {checkFileMode ? <FileChecker /> : <FileSaver />}
-    </Container>
+      {mode === "check" ? <FileChecker /> : <FileSaver />}
+    </div>
   );
 }

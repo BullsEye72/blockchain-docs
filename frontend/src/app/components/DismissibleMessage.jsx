@@ -1,44 +1,31 @@
-import React, { useEffect, useState } from "react";
-import { Message } from "semantic-ui-react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { X } from "lucide-react";
+
+const styles = {
+  success: "bg-green-50 border-green-300 text-green-800",
+  error: "bg-red-50 border-red-300 text-red-800",
+};
 
 export default function DismissibleMessage({ type, message, title }) {
-  const [visibleState, setVisibleState] = useState(false);
-  const [messageType, setMessageType] = useState("info");
-
-  const handleDismiss = () => {
-    setVisibleState(false);
-  };
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    setVisibleState(true);
-
-    let newStatus;
-    if (type === "success") {
-      newStatus = "positive";
-    } else if (type === "error") {
-      newStatus = "negative";
-    } else if (type === "error") {
-      newStatus = "info";
-    } else {
-      setVisibleState(false);
-      return;
-    }
-
-    setMessageType(newStatus);
+    setVisible(type === "success" || type === "error");
   }, [type, message, title]);
 
-  if (visibleState) {
-    return (
-      <Message
-        onDismiss={handleDismiss}
-        header={title}
-        content={message}
-        positive={messageType === "positive"}
-        negative={messageType === "negative"}
-        info={messageType === "info"}
-      />
-    );
-  }
+  if (!visible) return null;
 
-  return <></>;
+  return (
+    <div className={`flex items-start gap-3 border rounded-lg p-3 text-sm ${styles[type] ?? styles.error}`}>
+      <div className="flex-1">
+        {title && <p className="font-medium">{title}</p>}
+        {message && <p className="mt-0.5">{message}</p>}
+      </div>
+      <button onClick={() => setVisible(false)} className="shrink-0 opacity-60 hover:opacity-100">
+        <X size={14} />
+      </button>
+    </div>
+  );
 }

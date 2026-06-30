@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Grid, GridRow, GridColumn, Message, Icon } from "semantic-ui-react";
+import { useEffect, useState } from "react";
+import { Database } from "lucide-react";
 import DismissibleMessage from "../../../components/DismissibleMessage";
 import FileInfoSegment from "./FileInfoSegment";
 import EthereumSegment from "./EthereumSegment";
@@ -14,7 +14,7 @@ import { useSession } from "next-auth/react";
 export default function FileSaver() {
   const { data: session } = useSession();
   const [fileInfo, setFileInfo] = useState({});
-  const [errorMessage, setErrorMessage] = useState({ header: "", message: "", type: "" });
+  const [error, setError] = useState({ header: "", message: "", type: "" });
   const [stripeOpen, setStripeOpen] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(0);
   const [creditCount, setCreditCount] = useState(null);
@@ -25,48 +25,32 @@ export default function FileSaver() {
   */
 
   useEffect(() => {
-    if (session) {
-      getCreditCount().then(setCreditCount);
-    } else {
-      setCreditCount(null);
-    }
+    if (session) getCreditCount().then(setCreditCount);
+    else setCreditCount(null);
   }, [session]);
 
   useEffect(() => {
-    if (fileInfo.status === "success" && fileInfo.hash === "") {
-      setUploadStatus(1);
-    } else if (fileInfo.status === "error") {
+    if (fileInfo.status === "success" && fileInfo.hash === "") setUploadStatus(1);
+    else if (fileInfo.status === "error") {
       setUploadStatus(0);
-      setErrorMessage({ header: "Erreur", message: fileInfo.message, type: "error" });
+      setError({ header: "Erreur", message: fileInfo.message, type: "error" });
     }
   }, [fileInfo]);
 
   const handleSubmit = async () => {
     try {
-      // Pre-save to DB so the Stripe webhook can link the file to the account
       await storeFile({ userId: session?.user?.id ?? null, hash: fileInfo.hash, name: fileInfo.name });
-    } catch (e) {
-      // Already in DB — fine, continue
-    }
+    } catch (_) {}
 
     if (session) {
-      const creditCheck = await checkCreditForFileUpload();
-      if (creditCheck.hasCredit) {
-        setUploadStatus(2);
-        return;
-      }
+      const check = await checkCreditForFileUpload();
+      if (check.hasCredit) { setUploadStatus(2); return; }
     }
     setStripeOpen(true);
   };
 
-  const handleStripeComplete = () => {
-    setStripeOpen(false);
-    setUploadStatus(2);
-  };
-
-  const handleBlockchainSuccess = () => {
-    setCreditCount((c) => (c !== null && c > 0 ? c - 1 : c));
-  };
+  const handleStripeComplete = () => { setStripeOpen(false); setUploadStatus(2); };
+  const handleBlockchainSuccess = () => setCreditCount((c) => (c !== null && c > 0 ? c - 1 : c));
 
   return (
     <>
@@ -80,41 +64,39 @@ export default function FileSaver() {
       />
 
       {session && creditCount !== null && (
-        <Message info style={{ marginTop: "1em" }}>
-          <Icon name="database" />
+        <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 mb-4">
+          <Database size={14} />
           {creditCount > 0
             ? `${creditCount} enregistrement${creditCount > 1 ? "s" : ""} disponible${creditCount > 1 ? "s" : ""}`
-            : "Aucun crédit disponible — un achat sera nécessaire"}
-        </Message>
+            : "Aucun crédit — un achat sera nécessaire"}
+        </div>
       )}
 
-      <Grid columns={2} divided>
-        {errorMessage.type !== "" && (
-          <GridRow>
-            <DismissibleMessage type={errorMessage.type} title={errorMessage.header} message={errorMessage.message} />
-          </GridRow>
-        )}
+      {error.type && (
+        <div className="mb-4">
+          <DismissibleMessage type={error.type} title={error.header} message={error.message} />
+        </div>
+      )}
 
-        <GridRow>
-          <GridColumn>
-            <FileInput state={uploadStatus === 0} setFileInfo={setFileInfo} />
-            <FileInfoSegment
-              state={uploadStatus >= 1}
-              fileInfo={fileInfo}
-              setFileInfo={setFileInfo}
-              onSubmit={handleSubmit}
-            />
-          </GridColumn>
-          <GridColumn>
-            <EthereumSegment
-              state={uploadStatus === 2}
-              fileInfo={fileInfo}
-              userEmail={session?.user?.email ?? null}
-              onSuccess={handleBlockchainSuccess}
-            />
-          </GridColumn>
-        </GridRow>
-      </Grid>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          <FileInput state={uploadStatus === 0} setFileInfo={setFileInfo} />
+          <FileInfoSegment
+            state={uploadStatus >= 1}
+            fileInfo={fileInfo}
+            setFileInfo={setFileInfo}
+            onSubmit={handleSubmit}
+          />
+        </div>
+        <div>
+          <EthereumSegment
+            state={uploadStatus === 2}
+            fileInfo={fileInfo}
+            userEmail={session?.user?.email ?? null}
+            onSuccess={handleBlockchainSuccess}
+          />
+        </div>
+      </div>
     </>
   );
 }
